@@ -112,10 +112,11 @@ def get_dataset_gan(dataname, batch=64, size=100):
     else:
         raise ValueError(f'Dataset {dataname} not supported')
 
-    perm = np.random.permutation(len(dataset))[:size]
 
+    perm = np.random.permutation(len(dataset))[:size]
+    print(type(dataset.targets))
     dataset.data = dataset.data[perm]
-    dataset.targets = dataset.targets[perm]
+    dataset.targets = np.array(dataset.targets)[perm]
 
     trainloader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=batch,
@@ -342,6 +343,12 @@ def trainer(clients, server, epochs):
 
             if client.scheduler is not None:
                 client.scheduler.step()
+
+    # n get_lr
+#     if (self.last_epoch == 0) or (self.last_epoch % self.step_size != 0):
+#                                   ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+# ZeroDivisionError: integer modulo by zero
+
 
         # Extract and save the latent space
         server.extract_latent_space()

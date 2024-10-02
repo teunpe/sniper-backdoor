@@ -82,8 +82,9 @@ def main():
 
         for client in clients:
             test_clients.append(client.list_test_acc)
+            print((client.local_epochs*args.n_epochs) // 3)
             client.scheduler = optim.lr_scheduler.StepLR(
-                client.optimizer, step_size=(client.local_epochs*args.n_epochs) // 3, gamma=0.1)
+                client.optimizer, step_size=max((client.local_epochs*args.n_epochs) // 3,1), gamma=0.1)
 
         server_model = trainer(clients, server, args.n_epochs)
 
