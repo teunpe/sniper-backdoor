@@ -405,6 +405,8 @@ def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
         for i, data in tqdm(enumerate(trainloader)):
             images = data[0].to(device)
             images = Variable(images)
+            if images.shape[0] < 32:
+                continue
 
             # Create the labels which are later used as input for the BCE loss
             real_labels = torch.ones(batch_size, 1).to(device)

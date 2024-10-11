@@ -24,7 +24,7 @@ parser.add_argument('--seed', type=int, default=1, help='seed')
 parser.add_argument('--iid', action='store_true', default=False, help='iid')
 parser.add_argument('--dir', type=str, default='shadow', help='directory')
 parser.add_argument('--fake_dir', type=str,
-                    default='fake_datasets', help='directory')
+                    default='./data/fake_datasets', help='directory')
 args = parser.parse_args()
 
 
@@ -42,10 +42,10 @@ def main():
     for train, test in zip(list_trainloader, list_testloader):
         clients.append(Client(trainloader=train, testloader=test,
                               lr=args.lr, momentum=args.momentum,
-                              pretrained=args.pretrained, n_classes=n_classes))
+                              n_classes=n_classes))
 
     server = Server(
-        clients=clients, pretrained=args.pretrained, n_classes=n_classes,
+        clients=clients, n_classes=n_classes,
         testloader=copy.deepcopy(list_testloader[0]))
 
     server.fedavg()

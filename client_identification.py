@@ -1,7 +1,7 @@
 import argparse
 import torch
 from snn import *
-from keras.utils.vis_utils import plot_model
+from keras.utils import plot_model
 from tensorflow.keras.optimizers import Adam
 import os
 import numpy as np
@@ -55,12 +55,12 @@ def main():
 
     emb_size = args.n_clients
 
-    embedding_model = second_embedding_model(emb_size, dataset.shape[1] - 1)
+    embedding_model = second_embedding_model(emb_size, (dataset.shape[1] - 1,))
 
-    siamese_net = create_SNN_oneinput(embedding_model, dataset.shape[1] - 1)
+    siamese_net = create_SNN_oneinput(embedding_model, (dataset.shape[1] - 1,))
 
     plot_model(
-        siamese_net, show_shapes=True, expand_nested=True)
+        siamese_net, show_shapes=True, expand_nested=True, to_file="siamese_net")
 
     optimiser_obj = Adam(learning_rate=args.lr)
     siamese_net.compile(loss=triplet_loss_adapted_from_tf,
@@ -90,7 +90,7 @@ def main():
 
     euclidean_net = two_input_model_composer(
         siamese_net.layers[2], 2304, 1, n_classes)
-    plot_model(euclidean_net, show_shapes=True, expand_nested=True)
+    plot_model(euclidean_net, show_shapes=True, expand_nested=True, to_file="euclidian_net")
 
     dataset_clean = []
     for idx in range(args.n_clients):
@@ -119,15 +119,20 @@ def main():
         i = 0
         last = args.n_clients
         for _ in range(len(anchors)):
+            print(anchors_repeated[i:last, :].shape)
+            print(comparators.shape)
+            print('anchors: ', anchors_repeated[i:last, :])
+            print('comparators: ', comparators)
             predictions = euclidean_net.predict({'input_anchor': anchors_repeated[i:last, :],
                                                  'input_comparator': comparators})
-
+            print(predictions)
             # Get the index with the lowe distance
             min_idx = np.argmin(predictions)
             lis_idx[_][t] = int(min_idx)
 
             i = last
             last += args.n_clients
+        break
 
     for idx, client in enumerate(lis_idx):
         print(client)

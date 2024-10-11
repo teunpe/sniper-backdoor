@@ -5,24 +5,24 @@ Code for the paper "Sniper Backdoor: Single Client Targeted Backdoor Attack in F
 
 ### IID 
 ```bash
-python main.py --lr 0.001 --dataname cifar100 --n_clients 10 --iid --dir <path> --n_epochs 23 --pretrained
+python main.py --lr 0.001 --dataname cifar100 --n_clients 10 --iid --dir <path> --n_epochs 23
 ```
 
 ### Non-IID
 ```bash
-python main.py --lr 0.001 --dataname cifar100 --n_clients 10 --iid --dir <path> --n_epochs 23 --pretrained
+python main.py --lr 0.001 --dataname cifar100 --n_clients 10 --iid --dir <path> --n_epochs 23
 ```
 
 ## Generating synthetic data:
 
 ### IID
 ```bash
-pyhon synthetic_data.py --dataname cifar100 --dir <path> --n_clients 10 --iid
+python synthetic_data.py --dataname cifar100 --dir <path> --n_clients 10 --iid
 ```
 
 ### Non-IID
 ```bash
-pyhon synthetic_data.py --dataname cifar100 --dir <path> --n_clients 10
+python synthetic_data.py --dataname cifar100 --dir <path> --n_clients 10
 ```
 
 ## Shadow training:

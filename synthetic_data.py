@@ -17,7 +17,7 @@ parser.add_argument('--gen_dim', type=int, default=64, help='gen dim')
 parser.add_argument('--disc_dim', type=int, default=64, help='disc dim')
 parser.add_argument('--n_channels', type=int, default=1, help='n channels')
 parser.add_argument('--img_size', type=int, default=28, help='img size')
-parser.add_argument('--n_epochs', type=int, default=200, help='n epochs')
+parser.add_argument('--n_epochs', type=int, default=10, help='n epochs')
 parser.add_argument('--n_clients', type=int, default=10, help='n clients')
 parser.add_argument('--lr', type=float, default=0.0002, help='lr')
 parser.add_argument('--source_epoch', type=int, default=0,
