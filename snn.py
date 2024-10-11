@@ -47,7 +47,7 @@ def create_embedding_model(emb_size, input_shape):
               kernel_initializer='he_uniform',
               input_shape=(input_shape,)),
         Dense(emb_size,
-              activation=None,euclidean_net
+              activation=None,
               kernel_regularizer=l2(1e-3),
               kernel_initializer='he_uniform')
     ])

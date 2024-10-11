@@ -127,7 +127,6 @@ class Server(Participant):
         self.clients = clients
 
     def fedavg(self):
-        print('here')
         model_weights = [client.model.state_dict().values()
                          for client in self.clients]
         num_training_samples = [len(client.trainloader)
@@ -136,17 +135,14 @@ class Server(Participant):
         assert len(model_weights) == len(num_training_samples)
         new_weights = []
         total_training_samples = sum(num_training_samples)
-        print('here')
         for layers in zip(*model_weights):
             weighted_layers = torch.stack(
                 [torch.mul(l, w) for l, w in zip(layers, num_training_samples)])
             averaged_layers = torch.div(
                 torch.sum(weighted_layers, dim=0), total_training_samples)
             new_weights.append(averaged_layers)
-        print('here')
         self.model.load_state_dict(OrderedDict(zip(
             self.model.state_dict().keys(), new_weights)))
-        print('here')
         for client in self.clients:
             client.model.load_state_dict(
                 OrderedDict(zip(self.model.state_dict().keys(), new_weights)))

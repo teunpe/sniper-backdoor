@@ -119,13 +119,8 @@ def main():
         i = 0
         last = args.n_clients
         for _ in range(len(anchors)):
-            print(anchors_repeated[i:last, :].shape)
-            print(comparators.shape)
-            print('anchors: ', anchors_repeated[i:last, :])
-            print('comparators: ', comparators)
             predictions = euclidean_net.predict({'input_anchor': anchors_repeated[i:last, :],
                                                  'input_comparator': comparators})
-            print(predictions)
             # Get the index with the lowe distance
             min_idx = np.argmin(predictions)
             lis_idx[_][t] = int(min_idx)
