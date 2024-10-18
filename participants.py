@@ -10,6 +10,32 @@ from torchvision.models.vgg import VGG
 
 
 class Participant:
+    '''
+    Parent class of Client and Server
+
+    Attributes
+    ----------
+    device : torch.device
+        device on which the model runs
+    model : torch.nn.Module
+        initialized model architecture
+    testloader : torch.utils.data.DataLoader
+        test data loader
+    criterion : torch.nn.CrossEntropyLoss
+        loss criterion
+    data : string
+        name of dataset
+    list_test_loss : list
+        store test losses
+    list_test_acc : list
+        store test accuracies
+
+    Methods
+    -------
+    evaluate()
+        evaluate the model on the test set
+    '''
+
     def __init__(self, testloader, dataname='mnist', n_classes=10):
         self.device = torch.device(
             'cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -26,15 +52,12 @@ class Participant:
         '''
         Evaluate the model on the test set
 
-        Parameters:
-            model (torch.nn.Module): model
-            test_loader (torch.utils.data.DataLoader): test loader
-            criterion (torch.nn.modules.loss._Loss): loss function
-            device (torch.device): device
-
-        Returns:
-            test_loss (float): test loss
-            test_acc (float): test accuracy
+        Returns
+        -------
+        test_loss : float
+            test loss
+        test_acc : float
+            test accuracy
         '''
         test_loss = 0
         correct = 0
@@ -58,7 +81,71 @@ class Participant:
 
 
 class Client(Participant):
+    ''' Client on the FL setup
+
+    Attributes
+    ----------
+    optimizer : torch.optim.SGD
+        hyperparameter optimizer
+    scheduler : None
+        learning rate scheduler
+    trainloader : torch.utils.data.DataLoader
+        training data loader
+    local_epochs : int
+        number of local epochs
+    list_train_loss : list
+        train losses during each local epoch
+    list_train_acc : list
+        train accuracies during each local epoch
+    latent_space : list
+        unused??
+    models_record : list
+        state dicts saved during each epoch
+    testloader : torch.utils.data.DataLoader
+        test data loader
+    dataname : string
+        name of the dataset (default 'mnist')
+    n_classes : int
+        number of classes in the dataset
+    lr : float
+        initial learning rate (default 0.01)
+    momentum : float
+        initial momentum (default 0.9)
+    local_epochs : int
+        number of local training epochs (default 1)
+
+    Methods
+    -------
+    record_model()
+        saves the state_dict of the model in the model_records list
+    save_model(idx, args, path='results')
+        makes a local save of the model
+    train()
+        runs a training loop of the model
+    '''
+
     def __init__(self, trainloader, testloader, dataname='mnist', n_classes=10, lr=0.01, momentum=0.9, local_epochs=1):
+        '''
+        Parameters
+        ----------
+        optimizer : torch.optim.SGD
+            hyperparameter optimizer
+        scheduler : None
+            learning rate scheduler
+        trainloader : torch.utils.data.DataLoader
+            training data loader
+        local_epochs : int
+            number of local epochs
+        list_train_loss : list
+            train losses during each local epoch
+        list_train_acc : list
+            train accuracies during each local epoch
+        latent_space : list
+            unused??
+        models_record : list
+            state dicts saved during each epoch
+        '''
+
         super().__init__(testloader, dataname=dataname, n_classes=n_classes)
         self.optimizer = optim.SGD(
             self.model.parameters(), lr=lr, momentum=momentum)
@@ -71,9 +158,27 @@ class Client(Participant):
         self.models_record = []
 
     def record_model(self):
+        '''
+        Saves the state dict of the model in the model_records list
+        '''
         self.models_record.append(self.model.state_dict())
 
     def save_model(self, idx, args, path='results'):
+        '''
+        Makes a local save of the model.
+
+        Saves train_loss, train_acc, test_loss, test_acc, model_records, latent_space and args.
+
+        Parameters
+        ----------
+        idx : int
+            id of the save, generally the client number
+        args : NameSpace
+            arguments of the training run
+        path : string
+            path to save the model (default is 'results')
+        '''
+
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -89,6 +194,18 @@ class Client(Participant):
                    path)
 
     def train(self):
+        '''
+        Training loop of the client
+
+        Trains the model for its local epochs and stores the loss and accuracy after each epoch.
+
+        Returns
+        -------
+        train_loss : float
+            training loss at end of epoch
+        train_acc : float
+            training accuracy at end of epoch
+        '''
 
         self.model.train()
         for local_epoch in range(self.local_epochs):
@@ -122,11 +239,52 @@ class Client(Participant):
 
 
 class Server(Participant):
+    '''
+    Server in the FL setup
+
+    Attributes
+    ----------
+    clients : list
+        list of clients in the setup
+    dataname : string
+        name of the dataset (default 'mnist')
+    n_classes : int
+        number of classes in the dataset (default 10)
+    testloader : torch.utils.data.DataLoader
+        test data loader (default None)
+    
+    Methods
+    -------
+    fedavg()
+        Runs federated averaging on the server, stores resulting state dict in Server and sends to Clients
+    extract_latent_space()
+        Extracts the latent space of the server model by running a test sample through the model hidden layers 
+    '''
     def __init__(self, clients, dataname='mnist', n_classes=10, testloader=None):
+        '''
+        Parameters
+        ----------
+        clients : list
+        list of clients in the setup
+        dataname : string
+            name of the dataset (default 'mnist')
+        n_classes : int
+            number of classes in the dataset (default 10)
+        testloader : torch.utils.data.DataLoader
+            test data loader (default None)
+        '''
+
         super().__init__(testloader, dataname=dataname, n_classes=n_classes)
         self.clients = clients
 
     def fedavg(self):
+        '''
+        Runs federated averaging on the server
+
+        Computes average of model weights and returns resulting state dictionary to clients
+        '''
+
+        # Load model weights and number of training samples per client
         model_weights = [client.model.state_dict().values()
                          for client in self.clients]
         num_training_samples = [len(client.trainloader)
@@ -135,28 +293,44 @@ class Server(Participant):
         assert len(model_weights) == len(num_training_samples)
         new_weights = []
         total_training_samples = sum(num_training_samples)
+        
+        # Compute the average of the model weights over all clients
         for layers in zip(*model_weights):
             weighted_layers = torch.stack(
                 [torch.mul(l, w) for l, w in zip(layers, num_training_samples)])
             averaged_layers = torch.div(
                 torch.sum(weighted_layers, dim=0), total_training_samples)
             new_weights.append(averaged_layers)
+            
+        # Load the resulting state dict
         self.model.load_state_dict(OrderedDict(zip(
             self.model.state_dict().keys(), new_weights)))
+        
+        # Move the state dict to the clients
         for client in self.clients:
             client.model.load_state_dict(
                 OrderedDict(zip(self.model.state_dict().keys(), new_weights)))
 
     def extract_latent_space(self):
+        '''
+        Extract the latent space of the server model
+
+        Takes a test sample and records the output of the last hidden layer before the output layer.
+        Saves it in the latent_space attribute.
+        '''
+
+        # Take a test sample
         data, targets = next(iter(self.testloader))
         test_img = data[0][None].to(self.device)
 
         my_output = None
 
+        # Create a hook to capture the output
         def my_hook(module_, input_, output_):
             nonlocal my_output
             my_output = output_.detach()
 
+        # For each of the clients run the test sample through the model and store the output
         for client in self.clients:
             client.model.eval()
             if type(client.model) == ResNet:
@@ -166,5 +340,6 @@ class Server(Participant):
             else:
                 hook = client.model.conv3.register_forward_hook(my_hook)
             client.model(test_img)
+            # The flattened output is the latent space representation
             client.latent_space.append(torch.flatten(my_output))
             hook.remove()

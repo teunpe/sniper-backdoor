@@ -18,6 +18,28 @@ np.random.seed(42)
 
 
 class CustomDataset(torch.utils.data.Dataset):
+    """Implement a custom dataset (implements torch.utils.data.Dataset)
+
+    Attributes
+    ----------
+    data : any
+        data in the dataset
+    labels : any
+        labels of data entries
+    transform : any
+        transform used on the data
+    n_classes : int
+        number of classes in the dataset
+
+    Methods
+    -------
+    __getitem__(index)
+        get the image and label at the given index
+
+    __len__()
+        get the length of the dataset
+    """    
+
     def __init__(self, data, labels, transform=None, n_classes=10):
         # Ensure data and labels are tensors
 
@@ -34,6 +56,20 @@ class CustomDataset(torch.utils.data.Dataset):
         self.n_classes = n_classes
 
     def __getitem__(self, index):
+        """Return the image and label at the index
+
+        Parameters
+        ----------
+        index : int
+            index of the queried entry
+
+        Returns
+        -------
+        any
+            queried image
+        torch.Tensor
+            label of the image
+        """        
         img = self.data[index]
         label_idx = int(self.labels[index])
 
@@ -56,11 +92,38 @@ class CustomDataset(torch.utils.data.Dataset):
 
 
 def normalize(x):
+    """Normalize input over dimension 2 with Euclidian norm (p=2)
+
+    Parameters
+    ----------
+    x : torch.Tensor
+        input to be normalized
+
+    Returns
+    -------
+    torch.Tensor
+        normalized input
+    """    
     return torch.nn.functional.normalize(x.float(), p=2, dim=2)
 
 
 def get_dataset_fake(n_clients, batch_size, dir):
+    """Creates a dataloader of the generated data
 
+    Parameters
+    ----------
+    n_clients : int
+        number of clients in the setup
+    batch_size : int
+        batch size
+    dir : string
+        directory of the fake data
+
+    Returns
+    -------
+    list
+        list of dataloaders with fake data
+    """
     lis_dataloader = []
     for idx in range(n_clients):
         path = os.path.join(dir, f'fake_dataset_{idx}.pt')
@@ -77,10 +140,36 @@ def get_dataset_fake(n_clients, batch_size, dir):
 
 
 def get_dataset_gan(dataname, batch=64, size=100):
+    """Initialize a dataset for the GAN training
+
+    Parameters
+    ----------
+    dataname : string
+        name of the dataset
+    batch : int, optional
+        batch size, by default 64
+    size : int, optional
+        size of the GAN training dataset, by default 100
+
+    Returns
+    -------
+    trainloader : torch.utils.data.DataLoader
+        train loader for the GAN dataset
+    n_classes : int
+        number of classes in the dataset
+
+    Raises
+    ------
+    ValueError
+        Dataname must be 'mnist', 'emnist', 'fmnist', or 'cifar100'.
+    """    
+
+    # Prepare transforms
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5,), (0.5,)),
                                     ])
 
+    # Load the correct dataset (from torchvision)
     if dataname == 'mnist':
         n_classes = 10
         dataset = MNIST(root='./data', train=True,
@@ -99,6 +188,7 @@ def get_dataset_gan(dataname, batch=64, size=100):
 
     elif dataname == 'cifar100':
         n_classes = 100
+        # In the case of CIFAR100, override the transform
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize(128),
@@ -112,12 +202,12 @@ def get_dataset_gan(dataname, batch=64, size=100):
     else:
         raise ValueError(f'Dataset {dataname} not supported')
 
-
+    # Prepare a random permutatino of the dataset
     perm = np.random.permutation(len(dataset))[:size]
-    print(type(dataset.targets))
     dataset.data = dataset.data[perm]
     dataset.targets = np.array(dataset.targets)[perm]
 
+    # Create the dataloader
     trainloader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=batch,
                                               shuffle=True)
@@ -126,6 +216,26 @@ def get_dataset_gan(dataname, batch=64, size=100):
 
 
 def get_entire_dataset(size=1000, split=0.05, batch=64):
+    """Set up a train and test loader comprising the entire dataset
+
+    Parameters
+    ----------
+    size : int, optional
+        number of datapoints included in the dataset, by default 1000
+    split : float, optional
+        train/test split, by default 0.05
+    batch : int, optional
+        batch size, by default 64
+
+    Returns
+    -------
+    trainloader : torch.utils.data.DataLoader
+        training data loader
+    testloader : torch.utils.data.DataLoader
+        test data loader
+    n_classes : int
+        number of classes in the dataset
+    """    
     n_classes = 10
     # transform = transforms.Compose([
     #     transforms.ToPILImage(),
@@ -180,6 +290,33 @@ def get_entire_dataset(size=1000, split=0.05, batch=64):
 
 
 def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
+    '''
+    Get a list comprising the test and train loaders of each client 
+
+    Parameters
+    ----------
+    n_clients : int
+        number of clients in the setup
+    dataname : string
+        name of the dataset
+    iid : bool
+        specifies whether dataset should be iid or not (default False)
+    batch : int
+        batch size (default 64)
+    size : int
+        dataset size (default 1000)
+
+    Returns
+    -------
+    list_train : list
+        list of train loaders
+    list_test : list
+        list of test loaders
+    n_classes : int
+        number of classes in the dataset
+    '''
+
+    # Set up the transforms for mnist (to tensor, and normalize with mean and stdev 0.5)
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5,), (0.5,))
                                     ])
@@ -276,7 +413,26 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
 
 
 def get_iid_data(n_clients, trainset, transform, batch, n_classes):
+    """ Creates a list of training dataloaders with i.i.d. data
 
+    Parameters
+    ----------
+    n_clients : int
+        number of clients
+    trainset : torchvision.datasets.Dataset
+        torchvision dataset
+    transform : torchvision.transforms.Transform
+        transformation to be used on the dataset
+    batch : int
+        batch size
+    n_classes : int
+        number of classes in the dataset
+
+    Returns
+    -------
+    list_train : list
+        list of train loaders (one per client)
+    """
     perm = np.random.permutation(len(trainset))
     split = int(len(trainset) / n_clients)
     list_train = []
@@ -294,10 +450,32 @@ def get_iid_data(n_clients, trainset, transform, batch, n_classes):
     return list_train
 
 
-def get_non_iid_data(n_clients, n_class, trainset, transform, batch, n_classes):
+def get_non_iid_data(n_clients, trainset, transform, batch, n_classes):
+    """ Create non i.i.d. train loaders by splitting the classes between the clients.
+
+    The number of classes should be divisible by the number of clients.
+
+    Parameters
+    ----------
+    n_clients : int
+        number of clients
+    trainset : torchvision.datasets.Dataset
+        torchvision dataset
+    transform : torchvision.transforms.Transform
+        transformation to be used on the dataset
+    batch : int
+        batch size
+    n_classes : int
+        number of classes in the dataset
+
+    Returns
+    -------
+    list_train : list
+        list of train loaders (one per client)
+    """    
     # Ensure that the number of classes is divisible by the number of clients, so they have the same amount of labels
-    assert n_class % n_clients == 0
-    class_per_client = int(n_class/n_clients)
+    assert n_classes % n_clients == 0
+    class_per_client = int(n_classes/n_clients)
     from_class = 0
 
     targets = trainset.targets
@@ -323,8 +501,20 @@ def get_non_iid_data(n_clients, n_class, trainset, transform, batch, n_classes):
 
 
 def trainer(clients, server, epochs):
+    """Run the training loop over the clients and server for the given number of epochs.
+
+    Parameters
+    ----------
+    clients : list
+        list of clients
+    server : Server
+        server
+    epochs : int
+        number of training rounds 
+    """    
     print(f'\n[!] Training the model for {epochs} epochs')
 
+    # train the model for the number of epochs
     for epoch in range(epochs):
         print(f'\n[!] Epoch {epoch + 1} / {epochs}')
 
@@ -333,29 +523,27 @@ def trainer(clients, server, epochs):
             # Just 1 local epoch
             train_loss, train_acc = client.train()
 
+            # Record the train loss and accuracy every other epoch
             print(f'\n[!] Training loss: {train_loss:.4f}')
             print(f'[!] Training accuracy: {train_acc:.4f}')
             if epoch % 2 == 0:
                 test_loss, test_acc = client.evaluate()
                 print(f'[!] Testing accuracy: {test_acc:.4f}')
 
+            # Save the model state dict
             client.record_model()
 
             if client.scheduler is not None:
                 client.scheduler.step()
 
-    # n get_lr
-#     if (self.last_epoch == 0) or (self.last_epoch % self.step_size != 0):
-#                                   ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
-# ZeroDivisionError: integer modulo by zero
-
-
         # Extract and save the latent space
         server.extract_latent_space()
 
+        # Perform fedavg
         print(f'[!] Averaging')
         server.fedavg()
 
+        # Save the test loss and accuracy every other epoch
         if epoch % 2 == 0:
             test_loss, test_acc = server.evaluate()
             print(f'[!] Server testing accuracy: {test_acc:.4f}')
@@ -364,6 +552,15 @@ def trainer(clients, server, epochs):
 
 
 def weights_init(m):
+    """Initialize the weights of the model
+
+    Parameters
+    ----------
+    m : torch.nn.Module
+        model of which the weights are initialized
+    """    
+
+    # What does this do???
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
@@ -373,12 +570,16 @@ def weights_init(m):
 
 
 def get_noise(n_samples, noise_dim, device='cpu'):
-    '''
-    Generate noise vectors from the random normal distribution with dimensions (n_samples, noise_dim),
-    where
-        n_samples: the number of samples to generate based on batch_size
-        noise_dim: the dimension of the noise vector
-        device: device type can be cuda or cpu
+    '''Generate noise vectors from the random normal distribution with dimensions (n_samples, noise_dim).
+
+    Parameters
+    ----------
+    n_samples : int
+        the number of samples to generate based on batch_size
+    noise_dim : int
+        the dimension of the noise vector
+    device : torch.nn.Device
+        device type can be cuda or cpu
     '''
 
     return torch.randn(n_samples, noise_dim, 1, 1, device=device)
@@ -391,6 +592,39 @@ def denorm(x):
 
 def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
               n_epochs, batch_size, noise_dim, save_dir, no_of_channels, img_size, c_idx, device):
+    """Train the GAN for each client
+
+    Parameters
+    ----------
+    G : models.Generator
+        generator
+    D : models.Discriminator
+        discriminator
+    criterion : torch.nn.BCELoss
+        loss criterion
+    d_optimizer : torch.optim.Adam
+        optimizer for the discriminator
+    g_optimizer : torch.optim.Adam
+        optimizer for the generator
+    trainloader : torch.utils.data.DataLoader
+        train loader
+    n_epochs : int
+        number of training epochs
+    batch_size : int
+        batch size
+    noise_dim : int
+        noise dimension of the generator
+    save_dir : string
+        directory to save results in
+    no_of_channels : int
+        number of channels used in the generator
+    img_size : int
+        image size of the dataset
+    c_idx : int
+        index of the client
+    device : torch.nn.Device
+        device on which the models run
+    """    
 
     # Statistics to be saved
     d_losses = np.zeros(n_epochs)
@@ -405,8 +639,6 @@ def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
         for i, data in tqdm(enumerate(trainloader)):
             images = data[0].to(device)
             images = Variable(images)
-            if images.shape[0] < 32:
-                continue
 
             # Create the labels which are later used as input for the BCE loss
             real_labels = torch.ones(batch_size, 1).to(device)

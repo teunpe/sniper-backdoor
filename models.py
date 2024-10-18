@@ -4,7 +4,23 @@ import torch
 
 
 def build_model(n_classes=10, dataname='mnist'):
+    """Builds a model for the given dataset
 
+    For CIFAR10/CIFAR100 - builds VGG11_BN.
+    For others - builds a CNN with n_classes.
+
+    Parameters
+    ----------
+    n_classes : int, optional
+        number of classes in the dataset, by default 10
+    dataname : str, optional
+        name of the dataset, by default 'mnist'
+
+    Returns
+    -------
+    model : torchvision.models.Model
+        initialized model
+    """
     if dataname == 'cifar10' or dataname == 'cifar100':
         # model = resnet18(weights=ResNet18_Weights.DEFAULT)
         # for name, param in model.named_parameters():
@@ -37,6 +53,18 @@ def build_model(n_classes=10, dataname='mnist'):
 
 
 class CNN(nn.Module):
+    """Set up the CNN
+
+    Parameters
+    ----------
+    n_classes : int
+        number of classes in the dataset
+
+    Methods
+    -------
+    forward(x)
+        run input x through the model
+    """    
     def __init__(self, n_classes):
         super(CNN, self).__init__()
         self.conv1 = nn.Sequential(
@@ -57,7 +85,7 @@ class CNN(nn.Module):
         )
         self.out = nn.Linear(64 * 4 * 3 * 3, n_classes, bias=True)
 
-    def forward(self, x):
+    def forward(self, x):    
         output = self.conv1(x)
         output = self.conv2(output)
         output = self.conv3(output)
@@ -76,6 +104,21 @@ The first layer of the GAN, which takes a uniform noise distribution Z as input,
 
 
 class Discriminator(nn.Module):
+    """Discriminator to be used for the GAN
+
+    Parameters
+    ----------
+    disc_dim : int
+        dimensions of the discriminator
+    no_of_channels : int
+        number of channels used in the discriminator
+
+    Methods
+    -------
+    forward(x)
+        Runs input x through the model
+    """    
+
     def __init__(self, disc_dim, no_of_channels):
         super(Discriminator, self).__init__()
         self.conv1 = nn.Sequential(
@@ -109,6 +152,23 @@ class Discriminator(nn.Module):
 
 
 class Generator(nn.Module):
+    """Generator to be used in the GAN
+
+    Parameters
+    ----------
+    noise_dim : int
+        dimension of noise (in_channels)
+    gen_dim : int
+        dimension of generator (out_channels/4)
+    no_of_channels : int
+        number of channels to be used for the output
+
+    Methods
+    -------
+    forward(x)
+        runs input x through the model
+    """    
+
     def __init__(self, noise_dim, gen_dim, no_of_channels):
         super(Generator, self).__init__()
         self.conv = nn.Sequential(

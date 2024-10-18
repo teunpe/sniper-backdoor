@@ -17,7 +17,7 @@ parser.add_argument('--gen_dim', type=int, default=64, help='gen dim')
 parser.add_argument('--disc_dim', type=int, default=64, help='disc dim')
 parser.add_argument('--n_channels', type=int, default=1, help='n channels')
 parser.add_argument('--img_size', type=int, default=28, help='img size')
-parser.add_argument('--n_epochs', type=int, default=10, help='n epochs')
+parser.add_argument('--n_epochs', type=int, default=200, help='n epochs')
 parser.add_argument('--n_clients', type=int, default=10, help='n clients')
 parser.add_argument('--lr', type=float, default=0.0002, help='lr')
 parser.add_argument('--source_epoch', type=int, default=0,
@@ -48,7 +48,7 @@ def main():
 
     list_discrimiator = []
     for idx in range(args.n_clients):
-        # Load the model at the desired epoch
+        # Load the model of the current client
         path = os.path.join(
             args.dir, f'{args.dataname}_client_{idx}_results.pt')
         resources = torch.load(path)
@@ -58,15 +58,17 @@ def main():
         discriminator = Discriminator(args.disc_dim, args.n_channels)
         discriminator.apply(weights_init)
 
+        # Remove the output layer
         model.pop('out.weight')
         model.pop('out.bias')
 
+        # Copy the second-to-last layer weights as the initial discriminator weights
         model['conv4.weight'] = discriminator.state_dict()['conv4.weight']
         discriminator.load_state_dict(model)
 
         list_discrimiator.append(discriminator)
 
-    # Get the last model
+    # Get the last global model
     path = os.path.join(
         args.dir, f'{args.dataname}_server_results.pt')
     resources = torch.load(path)
@@ -75,6 +77,7 @@ def main():
     model.load_state_dict(w_model)
     model.to(device)
 
+    # Train the generator and discriminator
     for idx, D in enumerate(list_discrimiator):
         print(f'Training GAN for Client {idx}')
         G = Generator(args.noise_dim, args.gen_dim, args.n_channels)

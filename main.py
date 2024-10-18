@@ -32,12 +32,12 @@ args = parser.parse_args()
 
 
 def main():
-
+    # Initialize lists to keep track of accuracies
     test_clients = []
     test_server = []
 
     for _ in range(1):
-
+        # Initialize clients and server
         torch.manual_seed(_)
         np.random.seed(_)
 
@@ -82,17 +82,20 @@ def main():
 
         for client in clients:
             test_clients.append(client.list_test_acc)
-            print((client.local_epochs*args.n_epochs) // 3)
             client.scheduler = optim.lr_scheduler.StepLR(
                 client.optimizer, step_size=max((client.local_epochs*args.n_epochs) // 3,1), gamma=0.1)
 
+        # Train the clients for the specified number of epochs
         server_model = trainer(clients, server, args.n_epochs)
 
+        # Save the server accuracy over time
         test_server.append(server.list_test_acc)
 
+        # Save the state dicts and performance of each client in each epoch
         for idx, client in enumerate(clients):
             client.save_model(idx, args, args.dir)
 
+        # Save the server results
         torch.save({'model': server_model.state_dict(),
                     'loss': server.list_test_loss,
                     'acc': server.list_test_acc},

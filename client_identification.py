@@ -26,6 +26,7 @@ def main():
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
+    # create a dataset of shadow network data
     dataset_clean = []
     for idx in range(args.n_clients):
         path = os.path.join(args.dir_shadow,
@@ -50,6 +51,7 @@ def main():
 
     dataset = np.concatenate(
         [np.array(label_vector).reshape(-1, 1), reshaped], axis=1)
+
 
     # np.save(os.path.join(args.dir, 'clients_latent_space'), final_set)
 

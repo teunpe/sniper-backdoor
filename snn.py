@@ -7,7 +7,20 @@ from tensorflow.python.framework import dtypes
 
 
 def create_SNN(embedding_model, input_shape):
+    """_summary_
 
+    Parameters
+    ----------
+    embedding_model : _type_
+        _description_
+    input_shape : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     input_anchor = tf.keras.layers.Input(shape=(input_shape,))
     input_positive = tf.keras.layers.Input(shape=(input_shape,))
     input_negative = tf.keras.layers.Input(shape=(input_shape,))
@@ -27,6 +40,20 @@ def create_SNN(embedding_model, input_shape):
 
 
 def create_SNN_oneinput(embedding_model, input_shape):
+    """TODO
+
+    Parameters
+    ----------
+    embedding_model : _type_
+        _description_
+    input_shape : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """    
     input_images = Input(shape=input_shape, name='input_image')
     input_labels = Input(shape=(1,), name='input_label')
     embeddings = embedding_model([input_images])
@@ -58,6 +85,20 @@ def create_embedding_model(emb_size, input_shape):
 
 
 def second_embedding_model(emb_size, input_shape):
+    """TODO
+
+    Parameters
+    ----------
+    emb_size : _type_
+        _description_
+    input_shape : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """    
     print(type(input_shape))
     input_image = Input(shape=input_shape)
 
@@ -158,6 +199,20 @@ def masked_minimum(data, mask, dim=1):
 
 
 def triplet_loss_adapted_from_tf(y_true, y_pred):
+    """TODO
+
+    Parameters
+    ----------
+    y_true : _type_
+        _description_
+    y_pred : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """    
     del y_true
     margin = 0.2
     labels = y_pred[:, :1]
@@ -257,6 +312,24 @@ class EuclideanLayer(tf.keras.layers.Layer):
 
 
 def two_input_model_composer(tbs, input_lenght, latent_dim, n_classes):
+    """TODO
+
+    Parameters
+    ----------
+    tbs : _type_
+        _description_
+    input_lenght : _type_
+        _description_
+    latent_dim : _type_
+        _description_
+    n_classes : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """    
     # Instantiate the two inputs
     input_anchor = tf.keras.layers.Input(
         shape=(input_lenght,), name='input_anchor')
