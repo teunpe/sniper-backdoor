@@ -7,20 +7,6 @@ from tensorflow.python.framework import dtypes
 
 
 def create_SNN(embedding_model, input_shape):
-    """_summary_
-
-    Parameters
-    ----------
-    embedding_model : _type_
-        _description_
-    input_shape : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
     input_anchor = tf.keras.layers.Input(shape=(input_shape,))
     input_positive = tf.keras.layers.Input(shape=(input_shape,))
     input_negative = tf.keras.layers.Input(shape=(input_shape,))
@@ -40,20 +26,6 @@ def create_SNN(embedding_model, input_shape):
 
 
 def create_SNN_oneinput(embedding_model, input_shape):
-    """TODO
-
-    Parameters
-    ----------
-    embedding_model : _type_
-        _description_
-    input_shape : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """    
     input_images = Input(shape=input_shape, name='input_image')
     input_labels = Input(shape=(1,), name='input_label')
     embeddings = embedding_model([input_images])
@@ -62,6 +34,7 @@ def create_SNN_oneinput(embedding_model, input_shape):
     siamese_net = tf.keras.models.Model(inputs=[input_images, input_labels],
                                         outputs=labels_plus_embeddings)
 
+    print('SIAMESE NET SUMMARY:')
     siamese_net.summary()
     return siamese_net
 
@@ -85,20 +58,21 @@ def create_embedding_model(emb_size, input_shape):
 
 
 def second_embedding_model(emb_size, input_shape):
-    """TODO
+    """Create an embedding from the input image, of size equal to the number of clients
 
     Parameters
     ----------
-    emb_size : _type_
-        _description_
-    input_shape : _type_
-        _description_
+    emb_size : int
+        embedding size, equal to number of clients
+    input_shape : tuple
+        shape of the input data (image)
 
     Returns
     -------
-    _type_
-        _description_
+    tf.keras.models.Model
+        embedding model
     """    
+
     print(type(input_shape))
     input_image = Input(shape=input_shape)
 
@@ -199,20 +173,6 @@ def masked_minimum(data, mask, dim=1):
 
 
 def triplet_loss_adapted_from_tf(y_true, y_pred):
-    """TODO
-
-    Parameters
-    ----------
-    y_true : _type_
-        _description_
-    y_pred : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """    
     del y_true
     margin = 0.2
     labels = y_pred[:, :1]
@@ -312,31 +272,13 @@ class EuclideanLayer(tf.keras.layers.Layer):
 
 
 def two_input_model_composer(tbs, input_lenght, latent_dim, n_classes):
-    """TODO
-
-    Parameters
-    ----------
-    tbs : _type_
-        _description_
-    input_lenght : _type_
-        _description_
-    latent_dim : _type_
-        _description_
-    n_classes : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """    
     # Instantiate the two inputs
     input_anchor = tf.keras.layers.Input(
         shape=(input_lenght,), name='input_anchor')
     input_comparator = tf.keras.layers.Input(
         shape=(input_lenght,), name='input_comparator')
 
-    # Resemble the compression stage, both inputs feed the TBS
+    # Resemble the compression stage, both inputs feed the TBS (embedding model)
     output_anchor = tbs(input_anchor)
     output_comparator = tbs(input_comparator)
 

@@ -391,3 +391,5 @@ internship.code-workspace
 testspace.ipynb
 .vscode/launch.json
 __pycache__/snn.cpython-311.pyc
+euclidian_net.png
+siamese_net.png
