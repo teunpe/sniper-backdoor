@@ -822,6 +822,32 @@ def backdoor_evaluate(model, test_loader, criterion, device):
 
 def backdoor_model_trainer(model, criterion, optimizer, epochs, poison_trainloader, clean_testloader,
                            poison_testloader, device):
+    """Train the backdoored model.
+
+    Saves the resulting model with: train loss, train acc, test loss, test acc, poisoned test loss, 
+    poisoned test acc, and the accuracy per class for clean and poisoned data. 
+
+    Parameters
+    ----------
+    model 
+        model to be backdoored
+    criterion 
+    optimizer 
+    epochs : int
+        number of epochs
+    poison_trainloader 
+        train loader with poisoned data
+    clean_testloader 
+        test loader with clean data
+    poison_testloader :
+        test loader with poisoned data
+    device 
+
+    Returns
+    -------
+    tuple
+        list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor
+    """    
     list_train_loss = []
     list_train_acc = []
     list_test_loss = []
@@ -863,6 +889,13 @@ def backdoor_model_trainer(model, criterion, optimizer, epochs, poison_trainload
 
 
 def validation_per_class(model, test_loader, n_classes):
+    """Compute the accuracy per class
+
+    Returns
+    -------
+    Tensor
+        accuracy per class
+    """    
     model.eval()
 
     confusion_matrix = torch.zeros(n_classes, n_classes)
