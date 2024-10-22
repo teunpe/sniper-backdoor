@@ -28,6 +28,7 @@ parser.add_argument('--iid', action='store_true', help='iid')
 args = parser.parse_args()
 
 def main():
+    # set up args
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
@@ -38,6 +39,7 @@ def main():
     elif args.dataname == 'fmnist':
             n_classes = 10
 
+    # load the backdoored model
     path = os.path.join(
         args.dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_backdoor_results.pt')
     results = torch.load(path)
@@ -46,23 +48,26 @@ def main():
     model = build_model(n_classes, args.pretrained)
     model.load_state_dict(weights_model)
 
-    # Load the dataset
     device = torch.device(
         'cuda:0' if torch.cuda.is_available() else 'cpu')
-
     model.to(device)
+
+    # load the dataset
     datasets = get_dataset(args.n_clients, args.dataname, args.iid, args.batch_size, size=1000)
     _, list_test, n_classes, train_loader = datasets
     test_loader = list_test[0]
 
+    # set up loss and optimizer
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(
             model.parameters(), lr=args.lr, momentum=args.momentum)
     
+    # evaluate model before finetuning step
     test_loss, test_acc = backdoor_evaluate(
                     model, test_loader, criterion, device)
     print(f'[!] Testing accuracy before finetuning: {test_acc:.4f}')
 
+    # fine tune the model
     for epoch in range(args.finetuning_epochs):
         print(f'\n[!] Epoch {epoch + 1} / {args.finetuning_epochs}')
         train_loss, train_acc = backdoor_train(model, train_loader,
@@ -72,10 +77,12 @@ def main():
         print(f'[!] Training accuracy: {train_acc:.4f}')
         print(f'[!] Testing accuracy: {test_acc:.4f}')
         
+    # get poisoned data
     train_data_loader, test_data_ori_loader, test_data_tri_loader, n_classes = create_backdoor_data_loader(args.dataname, args.target_label, args.source_label,
                                                                                                            args.epsilon, args.batch_size,
                                                                                                            args.batch_size, device, args)
 
+    # test the finetuned model on the poisoned data
     clean_per_class = validation_per_class(
         model, test_data_ori_loader, n_classes)
     poisoned_per_class = validation_per_class(
@@ -84,6 +91,7 @@ def main():
                         model, test_data_tri_loader, criterion, device)
     print(f'[!] Poisoned testing accuracy: {poison_acc:.4f}')
 
+    # save resulting model and test results
     path = os.path.join(
         args.dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_finetuned_results.pt')
 

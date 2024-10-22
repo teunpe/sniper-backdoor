@@ -10,9 +10,38 @@ np.random.seed(42)
 
 
 class PoisonedDataset(Dataset):
+    """_summary_
 
-    def __init__(self, dataset, target_label=1, source_label=0, mode='train', epsilon=0.1, device=torch.device('cuda'), dataname='minst'):
+    Parameters
+    ----------
+    dataset : _type_
+        _description_
+    target_label : int, optional
+        default 1
+    source_label : int, optional
+        default 0
+    mode : str, optional
+        mode in which to use the model, by default 'train'
+    epsilon : float, optional
+        poisoning rate, by default 0.1
+    device : torch.device, optional
+        default torch.device('cuda')
+    dataname : str, optional
+        default 'mnist'
 
+    Methods
+    -------
+    __getitem__(item)
+        returns image and label at index
+    __len__()
+    __shape_info__()
+        get shape of images
+    add_trigger(data, targets, target_label, source_label, epsilon, mode)
+        add poison trigger to data with source and target label
+    
+    
+    """    
+    def __init__(self, dataset, target_label=1, source_label=0, mode='train', epsilon=0.1, device=torch.device('cuda'), dataname='mnist'):
         self.targets = dataset.labels.cpu().detach()
         self.data = dataset.data.cpu().detach()
 
@@ -29,7 +58,18 @@ class PoisonedDataset(Dataset):
         self.chanels = 1
 
     def __getitem__(self, item):
+        """Get image and label at index 
 
+        Parameters
+        ----------
+        item : int
+            index
+
+        Returns
+        -------
+        tuple
+            image, label
+        """        
         img = self.data[item]
         label_idx = int(self.targets[item])
 
@@ -52,7 +92,9 @@ class PoisonedDataset(Dataset):
         return self.data.shape[1:]
 
     def add_trigger(self, data, targets, target_label, source_label, epsilon, mode):
-
+        """Add poison trigger to datapoints with source label to target label
+        """        
+        
         print(f'[!] Generating {mode} bad images...')
 
         new_data = copy.deepcopy(data)
