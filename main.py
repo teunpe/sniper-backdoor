@@ -44,6 +44,8 @@ def main():
         list_trainloader, list_testloader, n_classes = get_dataset(
             args.n_clients, args.dataname, args.iid, args.batch_size, args.trainset_size)
 
+
+
         clients = []
         for train, test in zip(list_trainloader, list_testloader):
             clients.append(Client(trainloader=train, testloader=test,

@@ -327,6 +327,8 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
                          download=True)
         testset = MNIST(root='./data', train=False,
                         download=True)
+        holdoutset = MNIST(root='./data', train=True,
+                        download=True)
 
     elif dataname == 'emnist':
         n_classes = 26
@@ -393,15 +395,26 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
         trainset.data = torch.Tensor(trainset.data)
 
     perm = np.random.permutation(len(trainset))[size:]
-    trainset.data = trainset.data[perm]
-    trainset.targets = trainset.targets[perm]
+
+    holdoutperm = perm[:size]
+    holdoutset.data = holdoutset.data[holdoutperm]
+    holdoutset.targets = holdoutset.targets[holdoutperm]
+
+    holdoutset = CustomDataset(holdoutset.data, holdoutset.targets,
+                               transform=transform, n_classes=n_classes)
+    holdoutloader = torch.utils.data.DataLoader(holdoutset, batch_size = 64, num_workers = 3)
+    torch.save(holdoutloader, './results/holdout.pt')
+
+    trainperm = perm[size:]
+    trainset.data = trainset.data[trainperm]
+    trainset.targets = trainset.targets[trainperm]
 
     if iid:
         list_train = get_iid_data(
             n_clients, trainset, transform, batch, n_classes)
     else:
         list_train = get_non_iid_data(
-            n_clients, n_classes, trainset, transform, batch, n_classes)
+            n_clients, trainset, transform, batch, n_classes)
 
     testset = CustomDataset(testset.data, testset.targets,
                             transform=transform, n_classes=n_classes)
@@ -409,7 +422,7 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
     list_test = [torch.utils.data.DataLoader(
         testset, batch_size=64, num_workers=3) for _ in range(n_clients)]
 
-    return list_train, list_test, n_classes
+    return list_train, list_test, n_classes, holdoutloader
 
 
 def get_iid_data(n_clients, trainset, transform, batch, n_classes):
@@ -775,6 +788,12 @@ def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
 
 
 def backdoor_train(model, train_loader, optimizer, criterion, device):
+    """Returns
+    -------
+    tuple
+        train_loss, train_acc
+    """    
+
     running_loss = 0.0
     correct = 0
     total = 0
@@ -803,6 +822,11 @@ def backdoor_train(model, train_loader, optimizer, criterion, device):
 
 
 def backdoor_evaluate(model, test_loader, criterion, device):
+    """Returns
+    -------
+    tuple
+        test_loss, test_acc
+    """   
     model.eval()
     test_loss = 0
     correct = 0

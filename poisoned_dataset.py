@@ -92,7 +92,7 @@ def create_backdoor_data_loader(dataname, target_label, source_label, epsilon,
         train_data_loader, test_data_clean_loader, test_data_poisoned_loader, n_classes
 
     """
-    _, list_testloader, n_classes = get_dataset(
+    _, list_testloader, n_classes, _ = get_dataset(
         args.n_clients, dataname, True, batch_size_train)
 
     trainset, n_classes = get_dataset_gan(dataname, size=2048)

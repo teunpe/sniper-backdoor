@@ -78,6 +78,5 @@ def main():
                'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,
                 'poisoned_per_class': poisoned_per_class, 'model': model.state_dict(), 'args': args}, path)
 
-
 if __name__ == '__main__':
     main()
