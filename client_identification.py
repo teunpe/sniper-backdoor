@@ -62,7 +62,7 @@ def main():
     siamese_net = create_SNN_oneinput(embedding_model, (dataset.shape[1] - 1,))
 
     plot_model(
-        siamese_net, show_shapes=True, expand_nested=True, to_file="siamese_net")
+        siamese_net, show_shapes=True, expand_nested=True, to_file="siamese_net.jpg")
 
     optimiser_obj = Adam(learning_rate=args.lr)
     siamese_net.compile(loss=triplet_loss_adapted_from_tf,
@@ -92,7 +92,7 @@ def main():
 
     euclidean_net = two_input_model_composer(
         siamese_net.layers[2], 2304, 1, n_classes)
-    plot_model(euclidean_net, show_shapes=True, expand_nested=True, to_file="euclidian_net")
+    plot_model(euclidean_net, show_shapes=True, expand_nested=True, to_file="euclidian_net.jpg")
 
     dataset_clean = []
     for idx in range(args.n_clients):

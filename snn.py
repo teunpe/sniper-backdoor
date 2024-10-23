@@ -6,25 +6,6 @@ from tensorflow.python.ops import array_ops, math_ops
 from tensorflow.python.framework import dtypes
 
 
-def create_SNN(embedding_model, input_shape):
-    input_anchor = tf.keras.layers.Input(shape=(input_shape,))
-    input_positive = tf.keras.layers.Input(shape=(input_shape,))
-    input_negative = tf.keras.layers.Input(shape=(input_shape,))
-
-    embedding_anchor = embedding_model(input_anchor)
-    embedding_positive = embedding_model(input_positive)
-    embedding_negative = embedding_model(input_negative)
-
-    output = tf.keras.layers.concatenate([embedding_anchor, embedding_positive,
-                                          embedding_negative], axis=1)
-
-    siamese_net = tf.keras.models.Model([input_anchor, input_positive, input_negative],
-                                        output)
-    siamese_net.summary()
-
-    return siamese_net
-
-
 def create_SNN_oneinput(embedding_model, input_shape):
     input_images = Input(shape=input_shape, name='input_image')
     input_labels = Input(shape=(1,), name='input_label')
@@ -37,24 +18,6 @@ def create_SNN_oneinput(embedding_model, input_shape):
     print('SIAMESE NET SUMMARY:')
     siamese_net.summary()
     return siamese_net
-
-
-def create_embedding_model(emb_size, input_shape):
-    embedding_model = tf.keras.models.Sequential([
-        Dense(4096,
-              activation='relu',
-              kernel_regularizer=l2(1e-3),
-              kernel_initializer='he_uniform',
-              input_shape=(input_shape,)),
-        Dense(emb_size,
-              activation=None,
-              kernel_regularizer=l2(1e-3),
-              kernel_initializer='he_uniform')
-    ])
-
-    embedding_model.summary()
-
-    return embedding_model
 
 
 def second_embedding_model(emb_size, input_shape):
