@@ -401,7 +401,7 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
             n_clients, trainset, transform, batch, n_classes)
     else:
         list_train = get_non_iid_data(
-            n_clients, n_classes, trainset, transform, batch, n_classes)
+            n_clients, trainset, transform, batch, n_classes)
 
     testset = CustomDataset(testset.data, testset.targets,
                             transform=transform, n_classes=n_classes)
