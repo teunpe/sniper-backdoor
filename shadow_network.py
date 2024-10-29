@@ -37,7 +37,7 @@ def main():
         args.n_clients, args.batch_size, args.fake_dir)
 
     _, list_testloader, n_classes = get_dataset(
-        args.n_clients, args.dataname, args.iid, args.batch_size)
+        args.n_clients, args.dataname, args.iid, args.batch_size, args.datadir)
 
     clients = []
     for train, test in zip(list_trainloader, list_testloader):

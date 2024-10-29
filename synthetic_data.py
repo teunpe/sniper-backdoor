@@ -45,7 +45,7 @@ def main():
         'cuda:0' if torch.cuda.is_available() else 'cpu')
 
     trainloader, n_classes = get_dataset_gan(
-        args.dataname, args.batch_size, args.trainset_size)
+        args.dataname, args.batch_size, args.trainset_size, datadir=args.datadir)
 
     list_discrimiator = []
     for idx in range(args.n_clients):

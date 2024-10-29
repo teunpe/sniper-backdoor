@@ -54,7 +54,7 @@ def main():
     model.to(device)
 
     # load the dataset
-    datasets = get_dataset(args.n_clients, args.dataname, args.iid, args.batch_size, size=1000)
+    datasets = get_dataset(args.n_clients, args.dataname, args.iid, args.batch_size, size=1000, datadir=args.datadir)
     _, list_test, n_classes, train_loader = datasets
     test_loader = list_test[0]
 

@@ -3,7 +3,7 @@
 #SBATCH --partition=csedu
 #SBATCH --qos=csedu-normal
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=4G
+#SBATCH --mem=15G
 #SBATCH --gres=gpu:1
 #SBATCH --time=1:00:00
 #SBATCH --output=myjob-%j.out
