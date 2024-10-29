@@ -58,6 +58,7 @@ def main():
             clients=clients, dataname=args.dataname, n_classes=n_classes,
             testloader=copy.deepcopy(list_testloader[0]))
 
+        print(server.device)
         if args.warm:
             # If we are in the warm up model we train the model for few epochs in the 5% of the dataset
             trainloader, testloader, n_classes = get_entire_dataset(
@@ -69,7 +70,6 @@ def main():
             optimizer = optim.SGD(
                 model.parameters(), lr=0.01, momentum=args.momentum)
             criterion = nn.CrossEntropyLoss()
-            print(device)
             for _ in range(15):
                 backdoor_train(model, trainloader,
                                optimizer, criterion, device)
