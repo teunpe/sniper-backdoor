@@ -8,6 +8,8 @@
 #SBATCH --time=1:00:00
 #SBATCH --output=myjob-%j.out
 #SBATCH --error=myjob-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --email teun.peeters@ru.nl
 
 source //vol/csedu-nobackup/project/tpeeters/venv/bin/activate
 python main.py --lr 0.001 --dataname mnist --n_clients 10 --iid --n_epochs 10
