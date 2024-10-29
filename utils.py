@@ -139,7 +139,7 @@ def get_dataset_fake(n_clients, batch_size, dir):
     return lis_dataloader
 
 
-def get_dataset_gan(dataname, batch=64, size=100):
+def get_dataset_gan(dataname, batch=64, size=100, datadir='./dir'):
     """Initialize a dataset for the GAN training
 
     Parameters
@@ -172,18 +172,18 @@ def get_dataset_gan(dataname, batch=64, size=100):
     # Load the correct dataset (from torchvision)
     if dataname == 'mnist':
         n_classes = 10
-        dataset = MNIST(root='./data', train=True,
+        dataset = MNIST(root=datadir, train=True,
                         download=True, transform=transform)
 
     elif dataname == 'emnist':
         n_classes = 26
-        dataset = EMNIST(root='./data', train=True, split='letters',
+        dataset = EMNIST(root=datadir, train=True, split='letters',
                          download=True, transform=transform)
 
         dataset.targets = dataset.targets - 1
     elif dataname == 'fmnist':
         n_classes = 10
-        dataset = FashionMNIST(root='./data', train=True,
+        dataset = FashionMNIST(root=datadir, train=True,
                                download=True, transform=transform)
 
     elif dataname == 'cifar100':
@@ -197,7 +197,7 @@ def get_dataset_gan(dataname, batch=64, size=100):
                 0.247, 0.243, 0.261]),
         ])
 
-        dataset = CIFAR100(root='./data', train=True,
+        dataset = CIFAR100(root=datadir, train=True,
                            download=True, transform=transform)
     else:
         raise ValueError(f'Dataset {dataname} not supported')
@@ -215,7 +215,7 @@ def get_dataset_gan(dataname, batch=64, size=100):
     return trainloader, n_classes
 
 
-def get_entire_dataset(size=1000, split=0.05, batch=64):
+def get_entire_dataset(size=1000, split=0.05, batch=64, datadir='./data'):
     """Set up a train and test loader comprising the entire dataset
 
     Parameters
@@ -254,9 +254,9 @@ def get_entire_dataset(size=1000, split=0.05, batch=64):
             0.247, 0.243, 0.261]),
     ])
 
-    trainset = CIFAR10(root='./data', train=True,
+    trainset = CIFAR10(root=datadir, train=True,
                        download=True)
-    testset = CIFAR10(root='./data', train=False,
+    testset = CIFAR10(root=datadir, train=False,
                       download=True)
 
     # Ensure that targets and data are a tensor
@@ -289,7 +289,7 @@ def get_entire_dataset(size=1000, split=0.05, batch=64):
     return trainloader, testloader, n_classes
 
 
-def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
+def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./data'):
     '''
     Get a list comprising the test and train loaders of each client 
 
@@ -323,18 +323,18 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
 
     if dataname == 'mnist':
         n_classes = 10
-        trainset = MNIST(root='./data', train=True,
+        trainset = MNIST(root=datadir, train=True,
                          download=True)
-        testset = MNIST(root='./data', train=False,
+        testset = MNIST(root=datadir, train=False,
                         download=True)
-        holdoutset = MNIST(root='./data', train=True,
+        holdoutset = MNIST(root=datadir, train=True,
                         download=True)
 
     elif dataname == 'emnist':
         n_classes = 26
-        trainset = EMNIST(root='./data', train=True, split='letters',
+        trainset = EMNIST(root=datadir, train=True, split='letters',
                           download=True)
-        testset = EMNIST(root='./data', train=False, split='letters',
+        testset = EMNIST(root=datadir, train=False, split='letters',
                          download=True)
 
         trainset.targets = trainset.targets - 1
@@ -342,9 +342,9 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
 
     elif dataname == 'fmnist':
         n_classes = 10
-        trainset = FashionMNIST(root='./data', train=True,
+        trainset = FashionMNIST(root=datadir, train=True,
                                 download=True)
-        testset = FashionMNIST(root='./data', train=False,
+        testset = FashionMNIST(root=datadir, train=False,
                                download=True)
 
     elif dataname == 'cifar10':
@@ -366,9 +366,9 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
                 0.247, 0.243, 0.261]),
         ])
 
-        trainset = CIFAR10(root='./data', train=True,
+        trainset = CIFAR10(root=datadir, train=True,
                            download=True)
-        testset = CIFAR10(root='./data', train=False,
+        testset = CIFAR10(root=datadir, train=False,
                           download=True)
 
     elif dataname == 'cifar100':
@@ -381,9 +381,9 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
                 0.247, 0.243, 0.261]),
         ])
 
-        trainset = CIFAR100(root='./data', train=True,
+        trainset = CIFAR100(root=datadir, train=True,
                             download=True)
-        testset = CIFAR100(root='./data', train=False,
+        testset = CIFAR100(root=datadir, train=False,
                            download=True)
     else:
         raise ValueError(f'Dataset {dataname} not supported')
