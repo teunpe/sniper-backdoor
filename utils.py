@@ -646,7 +646,7 @@ def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
     fake_scores = np.zeros(n_epochs)
 
     total_step = len(trainloader)
-
+    print(batch_size) 
     for epoch in range(n_epochs):
         print(f'\n[!] Epoch {epoch + 1} / {n_epochs}')
         for i, data in tqdm(enumerate(trainloader)):
@@ -721,7 +721,7 @@ def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
             fake_scores[epoch] = fake_scores[epoch] * \
                 (i/(i+1.)) + fake_score.mean().data.item()*(1./(i+1.))
 
-            if (i) % batch_size == 0:
+            if (i+2) % batch_size == 0:
                 print('Epoch [{}/{}], Step [{}/{}], d_loss: {:.4f}, g_loss: {:.4f}, D(x): {:.2f}, D(G(z)): {:.2f}'
                       .format(epoch, n_epochs, i+1, total_step, d_loss.data.item(), g_loss.data.item(),
                               real_score.mean().data.item(), fake_score.mean().data.item()))
