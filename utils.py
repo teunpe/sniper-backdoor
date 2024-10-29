@@ -210,7 +210,7 @@ def get_dataset_gan(dataname, batch=64, size=100, datadir='./dir'):
     # Create the dataloader
     trainloader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=batch,
-                                              shuffle=True)
+                                              shuffle=True, drop_last=True)
 
     return trainloader, n_classes
 
@@ -667,7 +667,6 @@ def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
             # Second term of the loss is always zero since real_labels == 1
             outputs = D(images)
             outputs = outputs.squeeze().unsqueeze(1)
-            print(outputs, real_labels)
             d_loss_real = criterion(outputs, real_labels)
             real_score = outputs
 
