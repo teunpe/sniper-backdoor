@@ -69,7 +69,7 @@ def main():
             optimizer = optim.SGD(
                 model.parameters(), lr=0.01, momentum=args.momentum)
             criterion = nn.CrossEntropyLoss()
-
+            print(device)
             for _ in range(15):
                 backdoor_train(model, trainloader,
                                optimizer, criterion, device)
