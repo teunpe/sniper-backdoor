@@ -139,7 +139,7 @@ def get_dataset_fake(n_clients, batch_size, dir):
     return lis_dataloader
 
 
-def get_dataset_gan(dataname, batch=64, size=100, datadir='./dir'):
+def get_dataset_gan(dataname, batch=64, size=100, datadir='./data'):
     """Initialize a dataset for the GAN training
 
     Parameters
@@ -336,7 +336,7 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
                           download=True)
         testset = EMNIST(root=datadir, train=False, split='letters',
                          download=True)
-        holdoutset = EMNIST(root=datadir, train=True,
+        holdoutset = EMNIST(root=datadir, train=True, split='letters',
                         download=True)
 
         trainset.targets = trainset.targets - 1

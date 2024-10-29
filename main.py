@@ -28,7 +28,7 @@ parser.add_argument('--trainset_size', type=int,
                     default=1000, help='holdout dataset size')
 parser.add_argument('--warm', action='store_true',
                     default=False, help='Warm-up for Non-IID')
-parser.add_argument('--datadir', type=str, default='//vol/csedu-nobackup/project/tpeeters')
+parser.add_argument('--datadir', type=str, default='//vol/csedu-nobackup/project/tpeeters/data')
 args = parser.parse_args()
 
 

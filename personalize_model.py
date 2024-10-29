@@ -24,6 +24,7 @@ parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
 parser.add_argument('--finetuning_epochs', type=int, default=1, help='number of epochs in finetuning step')
 parser.add_argument('--dir', type=str, default='results', help='directory')
 parser.add_argument('--iid', action='store_true', help='iid')
+parser.add_argument('--datadir', type=str, default='//vol/csedu-nobackup/project/tpeeters/data')
 
 args = parser.parse_args()
 
