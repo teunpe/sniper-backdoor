@@ -336,6 +336,8 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
                           download=True)
         testset = EMNIST(root=datadir, train=False, split='letters',
                          download=True)
+        holdoutset = EMNIST(root=datadir, train=True,
+                        download=True)
 
         trainset.targets = trainset.targets - 1
         testset.targets = testset.targets - 1
