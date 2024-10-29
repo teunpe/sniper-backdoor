@@ -28,6 +28,7 @@ parser.add_argument('--trainset_size', type=int,
                     default=1000, help='holdout dataset size')
 parser.add_argument('--warm', action='store_true',
                     default=False, help='Warm-up for Non-IID')
+parser.add_argument('--datadir', type=str, default='//vol/csedu-nobackup/project/tpeeters')
 args = parser.parse_args()
 
 
@@ -42,7 +43,7 @@ def main():
         np.random.seed(_)
 
         list_trainloader, list_testloader, n_classes, holdoutloader = get_dataset(
-            args.n_clients, args.dataname, args.iid, args.batch_size, args.trainset_size)
+            args.n_clients, args.dataname, args.iid, args.batch_size, args.trainset_size, args.datadir)
 
 
 
