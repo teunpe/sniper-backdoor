@@ -41,7 +41,7 @@ def main():
         torch.manual_seed(_)
         np.random.seed(_)
 
-        list_trainloader, list_testloader, n_classes holdoutloader = get_dataset(
+        list_trainloader, list_testloader, n_classes, holdoutloader = get_dataset(
             args.n_clients, args.dataname, args.iid, args.batch_size, args.trainset_size)
 
 
