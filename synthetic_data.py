@@ -22,7 +22,7 @@ parser.add_argument('--n_clients', type=int, default=10, help='n clients')
 parser.add_argument('--lr', type=float, default=0.0002, help='lr')
 parser.add_argument('--source_epoch', type=int, default=0,
                     help='source epoch to create the discriminator')
-parser.add_argument('--dir', type=str, default='results',
+parser.add_argument('--dir', type=str, default='//vol/csedu-nobackup/project/tpeeters/results',
                     help='source directory')
 parser.add_argument('--dataname', type=str, default='mnist',
                     choices=['mnist', 'emnist', 'fmnist'], help='dataname')

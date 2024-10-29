@@ -13,9 +13,9 @@ parser.add_argument('--batch_size', type=int, default=20, help='batch size')
 parser.add_argument('--alpha', type=float, default=0.02, help='alpha')
 parser.add_argument('--n_clients', type=int, default=10,
                     help='number of clients')
-parser.add_argument('--dir', type=str, default='results', help='directory')
+parser.add_argument('--dir', type=str, default='//vol/csedu-backup/project/tpeeters/results', help='directory')
 parser.add_argument('--dir_shadow', type=str,
-                    default='shadow', help='directory')
+                    default='//vol/csedu-backup/project/tpeeters/shadow', help='directory')
 parser.add_argument('--dataname', type=str, default='mnist',
                     choices=['mnist', 'emnist', 'fmnist'])
 parser.add_argument('--seed', type=int, default=42, help='seed')

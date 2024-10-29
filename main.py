@@ -22,7 +22,7 @@ parser.add_argument('--n_local_epochs', type=int,
 parser.add_argument('--batch_size', type=int, default=64,
                     help='batch size')
 parser.add_argument('--seed', type=int, default=1, help='seed')
-parser.add_argument('--dir', type=str, default='results', help='directory')
+parser.add_argument('--dir', type=str, default='//vol/csedu-nobackup/project/tpeeters/results', help='directory')
 parser.add_argument('--iid', action='store_true', default=False, help='iid')
 parser.add_argument('--trainset_size', type=int,
                     default=1000, help='holdout dataset size')

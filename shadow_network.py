@@ -22,9 +22,9 @@ parser.add_argument('--batch_size', type=int, default=64,
                     help='batch size')
 parser.add_argument('--seed', type=int, default=1, help='seed')
 parser.add_argument('--iid', action='store_true', default=False, help='iid')
-parser.add_argument('--dir', type=str, default='shadow', help='directory')
+parser.add_argument('--dir', type=str, default='//vol/csedu-nobackup/project/tpeeters/shadow', help='directory')
 parser.add_argument('--fake_dir', type=str,
-                    default='./data/fake_datasets', help='directory')
+                    default='//vol/csedu-nobackup/project/tpeeters/data/fake_datasets', help='directory')
 parser.add_argument('--datadir', type=str, default='//vol/csedu-backup/project/tpeeters/data')
 args = parser.parse_args()
 
