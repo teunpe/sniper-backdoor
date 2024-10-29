@@ -393,3 +393,9 @@ testspace.ipynb
 __pycache__/snn.cpython-311.pyc
 euclidian_net.png
 siamese_net.png
+__pycache__/models.cpython-312.pyc
+__pycache__/poisoned_dataset.cpython-312.pyc
+__pycache__/utils.cpython-312.pyc
+results/holdout.pt
+results/mnist_0.1_1->7_backdoor_results.pt
+results/mnist_0.1_1->7_finetuned_results.pt
