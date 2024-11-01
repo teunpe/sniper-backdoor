@@ -22,7 +22,7 @@ parser.add_argument('--n_clients', type=int, default=10, help='n clients')
 parser.add_argument('--lr', type=float, default=0.0002, help='lr')
 parser.add_argument('--source_epoch', type=int, default=0,
                     help='source epoch to create the discriminator')
-parser.add_argument('--dir', type=str, default='//vol/csedu-nobackup/project/tpeeters/results',
+parser.add_argument('--dir', type=str, default='./',
                     help='source directory')
 parser.add_argument('--dataname', type=str, default='mnist',
                     choices=['mnist', 'emnist', 'fmnist'], help='dataname')
@@ -32,7 +32,6 @@ parser.add_argument('--trainset_size', type=int,
                     default=1000, help='holdout dataset size')
 parser.add_argument('--pretrained', action='store_true',
                     default=False, help='load a pretrained model')
-parser.add_argument('--datadir', type=str, default='//vol/csedu-nobackup/project/tpeeters/data')
 
 args = parser.parse_args()
 
@@ -43,15 +42,18 @@ def main():
 
     device = torch.device(
         'cuda:0' if torch.cuda.is_available() else 'cpu')
+    
+    data_dir = os.path.join(args.dir, 'data')
+    results_dir = os.path.join(args.dir, 'results')
 
     trainloader, n_classes = get_dataset_gan(
-        args.dataname, args.batch_size, args.trainset_size, datadir=args.datadir)
+        args.dataname, args.batch_size, args.trainset_size, datadir=data_dir)
 
     list_discrimiator = []
     for idx in range(args.n_clients):
         # Load the model of the current client
         path = os.path.join(
-            args.dir, f'{args.dataname}_client_{idx}_results.pt')
+            results_dir, f'{args.dataname}_client_{idx}_results.pt')
         resources = torch.load(path)
         model = resources['model_records'][args.source_epoch]
 
@@ -71,7 +73,7 @@ def main():
 
     # Get the last global model
     path = os.path.join(
-        args.dir, f'{args.dataname}_server_results.pt')
+        results_dir, f'{args.dataname}_server_results.pt')
     resources = torch.load(path)
     w_model = resources['model']
     model = build_model(n_classes, args.pretrained)
@@ -90,7 +92,7 @@ def main():
         g_optim = torch.optim.Adam(G.parameters(), lr=args.lr)
         criterion = torch.nn.BCELoss()
 
-        path = os.path.join(args.dir, f'gan_{args.dataname}')
+        path = os.path.join(results_dir, f'gan_{args.dataname}')
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -111,7 +113,7 @@ def main():
             fake_images, predictions, n_classes=n_classes)
 
         fake_directory = os.path.join(
-            args.dir, f'fake_datasets_{args.dataname}')
+            results_dir, f'fake_datasets_{args.dataname}')
         if not os.path.exists(fake_directory):
             os.makedirs(fake_directory)
         fake_path = os.path.join(fake_directory, f'fake_dataset_{idx}.pt')

@@ -264,7 +264,7 @@ class EuclideanLayer(tf.keras.layers.Layer):
         #self.total.assign_add(tf.reduce_sum(inputs, axis=0))
         # Inputs is the concatenation of 2 R5 vectors
         # The euclidian distance should be in R1
-        print(inputs)
+        print(inputs.shape)
         print(self.n_classes)
         res = euclidean_tf_based(
             inputs[:, :int(self.n_classes/2)], inputs[:, int(self.n_classes/2):int(self.n_classes)])

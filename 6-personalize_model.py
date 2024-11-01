@@ -22,9 +22,8 @@ parser.add_argument('--pretrained', action='store_true', help='pretrained')
 parser.add_argument('--n_clients', type=int, default=10)
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
 parser.add_argument('--finetuning_epochs', type=int, default=1, help='number of epochs in finetuning step')
-parser.add_argument('--dir', type=str, default='//vol/csedu-nobackup/project/tpeeters/results', help='directory')
+parser.add_argument('--dir', type=str, default='./', help='directory')
 parser.add_argument('--iid', action='store_true', help='iid')
-parser.add_argument('--datadir', type=str, default='//vol/csedu-nobackup/project/tpeeters/data')
 
 args = parser.parse_args()
 
@@ -32,6 +31,9 @@ def main():
     # set up args
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
+
+    data_dir = os.path.join(args.dir, 'data')
+    results_dir = os.path.join(args.dir, 'results')
 
     if args.dataname == 'mnist':
         n_classes = 10
@@ -42,7 +44,7 @@ def main():
 
     # load the backdoored model
     path = os.path.join(
-        args.dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_backdoor_results.pt')
+        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_backdoor_results.pt')
     results = torch.load(path)
 
     weights_model = results['model']
@@ -54,7 +56,7 @@ def main():
     model.to(device)
 
     # load the dataset
-    datasets = get_dataset(args.n_clients, args.dataname, args.iid, args.batch_size, size=1000, datadir=args.datadir)
+    datasets = get_dataset(args.n_clients, args.dataname, args.iid, args.batch_size, size=1000, datadir=data_dir)
     _, list_test, n_classes, train_loader = datasets
     test_loader = list_test[0]
 
@@ -94,7 +96,7 @@ def main():
 
     # save resulting model and test results
     path = os.path.join(
-        args.dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_finetuned_results.pt')
+        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_finetuned_results.pt')
 
     torch.save({'train_loss': train_loss, 'train_acc': train_acc, 'test_loss': test_loss, 'test_acc': test_acc,
                'test_loss_backdoor': poison_loss, 'test_acc_backdoor': poison_acc, 'clean_per_class': clean_per_class,

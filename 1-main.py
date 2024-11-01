@@ -22,17 +22,19 @@ parser.add_argument('--n_local_epochs', type=int,
 parser.add_argument('--batch_size', type=int, default=64,
                     help='batch size')
 parser.add_argument('--seed', type=int, default=1, help='seed')
-parser.add_argument('--dir', type=str, default='//vol/csedu-nobackup/project/tpeeters/results', help='directory')
 parser.add_argument('--iid', action='store_true', default=False, help='iid')
 parser.add_argument('--trainset_size', type=int,
                     default=1000, help='holdout dataset size')
 parser.add_argument('--warm', action='store_true',
                     default=False, help='Warm-up for Non-IID')
-parser.add_argument('--datadir', type=str, default='//vol/csedu-nobackup/project/tpeeters/data')
+parser.add_argument('--dir', type=str, default='./')
 args = parser.parse_args()
 
 
 def main():
+    data_dir = os.path.join(args.dir, 'data')
+    results_dir = os.path.join(args.dir, 'results')
+
     # Initialize lists to keep track of accuracies
     test_clients = []
     test_server = []
@@ -43,7 +45,7 @@ def main():
         np.random.seed(_)
 
         list_trainloader, list_testloader, n_classes, holdoutloader = get_dataset(
-            args.n_clients, args.dataname, args.iid, args.batch_size, args.trainset_size, args.datadir)
+            args.n_clients, args.dataname, args.iid, args.batch_size, args.trainset_size, data_dir)
 
 
 
@@ -96,16 +98,16 @@ def main():
 
         # Save the state dicts and performance of each client in each epoch
         for idx, client in enumerate(clients):
-            client.save_model(idx, args, args.dir)
+            client.save_model(idx, args, results_dir)
 
         # Save the server results
         torch.save({'model': server_model.state_dict(),
                     'loss': server.list_test_loss,
                     'acc': server.list_test_acc},
-                   os.path.join(args.dir, f'{args.dataname}_server_results.pt'))
+                   os.path.join(results_dir, f'{args.dataname}_server_results.pt'))
 
         torch.save({'acc_clients': test_clients,
-                    'acc_server': test_server}, os.path.join(args.dir, f'{args.dataname}_average_results.pt'))
+                    'acc_server': test_server}, os.path.join(results_dir, f'{args.dataname}_average_results.pt'))
 
 
 if __name__ == '__main__':

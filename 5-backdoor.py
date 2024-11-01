@@ -25,7 +25,7 @@ parser.add_argument('--pretrained', action='store_true', help='pretrained')
 parser.add_argument('--fake_dir', type=str)
 parser.add_argument('--n_clients', type=int, default=10)
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
-parser.add_argument('--dir', type=str, default='results', help='directory')
+parser.add_argument('--dir', type=str, default='./', help='directory')
 parser.add_argument('--iid', action='store_true', help='iid')
 
 args = parser.parse_args()
@@ -35,6 +35,8 @@ def main():
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
+    results_dir = os.path.join(args.dir, 'results')
+
     if args.dataname == 'mnist':
         n_classes = 10
     elif args.dataname == 'emnist':
@@ -43,7 +45,7 @@ def main():
         n_classes = 10
 
     path = os.path.join(
-        args.dir, f'{args.dataname}_server_results.pt')
+        results_dir, f'{args.dataname}_server_results.pt')
     w_model = torch.load(path)['model']
 
     model = build_model(n_classes, args.pretrained)
@@ -72,7 +74,7 @@ def main():
 
     # Save the results
     path = os.path.join(
-        args.dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_backdoor_results.pt')
+        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_backdoor_results.pt')
 
     torch.save({'train_loss': list_train_loss, 'train_acc': list_train_acc, 'test_loss': list_test_loss, 'test_acc': list_test_acc,
                'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,

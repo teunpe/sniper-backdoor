@@ -1,3 +1,4 @@
+import os
 import argparse
 import torch
 from utils import get_dataset_fake, get_dataset, trainer
@@ -22,10 +23,7 @@ parser.add_argument('--batch_size', type=int, default=64,
                     help='batch size')
 parser.add_argument('--seed', type=int, default=1, help='seed')
 parser.add_argument('--iid', action='store_true', default=False, help='iid')
-parser.add_argument('--dir', type=str, default='//vol/csedu-nobackup/project/tpeeters/shadow', help='directory')
-parser.add_argument('--fake_dir', type=str,
-                    default='//vol/csedu-nobackup/project/tpeeters/data/fake_datasets', help='directory')
-parser.add_argument('--datadir', type=str, default='//vol/csedu-backup/project/tpeeters/data')
+parser.add_argument('--dir', type=str, default='./', help='directory')
 args = parser.parse_args()
 
 
@@ -33,11 +31,15 @@ def main():
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
-    list_trainloader = get_dataset_fake(
-        args.n_clients, args.batch_size, args.fake_dir)
+    data_dir = os.path.join(args.dir, 'data')
+    fake_data_dir = os.path.join(args.dir, f'results/fake_datasets_{args.dataname}')
+    shadow_dir = os.path.join(args.dir, 'shadow')
 
-    _, list_testloader, n_classes = get_dataset(
-        args.n_clients, args.dataname, args.iid, args.batch_size, args.datadir)
+    list_trainloader = get_dataset_fake(
+        args.n_clients, args.batch_size, fake_data_dir)
+
+    _, list_testloader, n_classes, _ = get_dataset(
+        args.n_clients, args.dataname, args.iid, args.batch_size, datadir=data_dir)
 
     clients = []
     for train, test in zip(list_trainloader, list_testloader):
@@ -54,7 +56,7 @@ def main():
     trainer(clients, server, args.n_epochs)
 
     for idx, client in enumerate(clients):
-        client.save_model(idx, args, args.dir)
+        client.save_model(idx, args, shadow_dir)
 
 
 if __name__ == '__main__':

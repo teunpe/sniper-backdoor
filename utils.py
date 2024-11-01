@@ -348,6 +348,8 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
                                 download=True)
         testset = FashionMNIST(root=datadir, train=False,
                                download=True)
+        holdoutset = FashionMNIST(root=datadir, train=True, download=True)
+
 
     elif dataname == 'cifar10':
         n_classes = 10
