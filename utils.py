@@ -139,7 +139,7 @@ def get_dataset_fake(n_clients, batch_size, dir):
     return lis_dataloader
 
 
-def get_dataset_gan(dataname, batch=64, size=100):
+def get_dataset_gan(dataname, batch=64, size=100, datadir='./data'):
     """Initialize a dataset for the GAN training
 
     Parameters
@@ -172,18 +172,18 @@ def get_dataset_gan(dataname, batch=64, size=100):
     # Load the correct dataset (from torchvision)
     if dataname == 'mnist':
         n_classes = 10
-        dataset = MNIST(root='./data', train=True,
+        dataset = MNIST(root=datadir, train=True,
                         download=True, transform=transform)
 
     elif dataname == 'emnist':
         n_classes = 26
-        dataset = EMNIST(root='./data', train=True, split='letters',
+        dataset = EMNIST(root=datadir, train=True, split='letters',
                          download=True, transform=transform)
 
         dataset.targets = dataset.targets - 1
     elif dataname == 'fmnist':
         n_classes = 10
-        dataset = FashionMNIST(root='./data', train=True,
+        dataset = FashionMNIST(root=datadir, train=True,
                                download=True, transform=transform)
 
     elif dataname == 'cifar100':
@@ -197,7 +197,7 @@ def get_dataset_gan(dataname, batch=64, size=100):
                 0.247, 0.243, 0.261]),
         ])
 
-        dataset = CIFAR100(root='./data', train=True,
+        dataset = CIFAR100(root=datadir, train=True,
                            download=True, transform=transform)
     else:
         raise ValueError(f'Dataset {dataname} not supported')
@@ -210,12 +210,12 @@ def get_dataset_gan(dataname, batch=64, size=100):
     # Create the dataloader
     trainloader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=batch,
-                                              shuffle=True)
+                                              shuffle=True, drop_last=True)
 
     return trainloader, n_classes
 
 
-def get_entire_dataset(size=1000, split=0.05, batch=64):
+def get_entire_dataset(size=1000, split=0.05, batch=64, datadir='./data'):
     """Set up a train and test loader comprising the entire dataset
 
     Parameters
@@ -254,9 +254,9 @@ def get_entire_dataset(size=1000, split=0.05, batch=64):
             0.247, 0.243, 0.261]),
     ])
 
-    trainset = CIFAR10(root='./data', train=True,
+    trainset = CIFAR10(root=datadir, train=True,
                        download=True)
-    testset = CIFAR10(root='./data', train=False,
+    testset = CIFAR10(root=datadir, train=False,
                       download=True)
 
     # Ensure that targets and data are a tensor
@@ -289,7 +289,7 @@ def get_entire_dataset(size=1000, split=0.05, batch=64):
     return trainloader, testloader, n_classes
 
 
-def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
+def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./data'):
     '''
     Get a list comprising the test and train loaders of each client 
 
@@ -323,27 +323,33 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
 
     if dataname == 'mnist':
         n_classes = 10
-        trainset = MNIST(root='./data', train=True,
+        trainset = MNIST(root=datadir, train=True,
                          download=True)
-        testset = MNIST(root='./data', train=False,
+        testset = MNIST(root=datadir, train=False,
+                        download=True)
+        holdoutset = MNIST(root=datadir, train=True,
                         download=True)
 
     elif dataname == 'emnist':
         n_classes = 26
-        trainset = EMNIST(root='./data', train=True, split='letters',
+        trainset = EMNIST(root=datadir, train=True, split='letters',
                           download=True)
-        testset = EMNIST(root='./data', train=False, split='letters',
+        testset = EMNIST(root=datadir, train=False, split='letters',
                          download=True)
+        holdoutset = EMNIST(root=datadir, train=True, split='letters',
+                        download=True)
 
         trainset.targets = trainset.targets - 1
         testset.targets = testset.targets - 1
 
     elif dataname == 'fmnist':
         n_classes = 10
-        trainset = FashionMNIST(root='./data', train=True,
+        trainset = FashionMNIST(root=datadir, train=True,
                                 download=True)
-        testset = FashionMNIST(root='./data', train=False,
+        testset = FashionMNIST(root=datadir, train=False,
                                download=True)
+        holdoutset = FashionMNIST(root=datadir, train=True, download=True)
+
 
     elif dataname == 'cifar10':
         n_classes = 10
@@ -364,9 +370,9 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
                 0.247, 0.243, 0.261]),
         ])
 
-        trainset = CIFAR10(root='./data', train=True,
+        trainset = CIFAR10(root=datadir, train=True,
                            download=True)
-        testset = CIFAR10(root='./data', train=False,
+        testset = CIFAR10(root=datadir, train=False,
                           download=True)
 
     elif dataname == 'cifar100':
@@ -379,9 +385,9 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
                 0.247, 0.243, 0.261]),
         ])
 
-        trainset = CIFAR100(root='./data', train=True,
+        trainset = CIFAR100(root=datadir, train=True,
                             download=True)
-        testset = CIFAR100(root='./data', train=False,
+        testset = CIFAR100(root=datadir, train=False,
                            download=True)
     else:
         raise ValueError(f'Dataset {dataname} not supported')
@@ -393,8 +399,19 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
         trainset.data = torch.Tensor(trainset.data)
 
     perm = np.random.permutation(len(trainset))[size:]
-    trainset.data = trainset.data[perm]
-    trainset.targets = trainset.targets[perm]
+
+    holdoutperm = perm[:size]
+    holdoutset.data = holdoutset.data[holdoutperm]
+    holdoutset.targets = holdoutset.targets[holdoutperm]
+
+    holdoutset = CustomDataset(holdoutset.data, holdoutset.targets,
+                               transform=transform, n_classes=n_classes)
+    holdoutloader = torch.utils.data.DataLoader(holdoutset, batch_size = 64, num_workers = 3)
+    torch.save(holdoutloader, './results/holdout.pt')
+
+    trainperm = perm[size:]
+    trainset.data = trainset.data[trainperm]
+    trainset.targets = trainset.targets[trainperm]
 
     if iid:
         list_train = get_iid_data(
@@ -409,7 +426,7 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000):
     list_test = [torch.utils.data.DataLoader(
         testset, batch_size=64, num_workers=3) for _ in range(n_clients)]
 
-    return list_train, list_test, n_classes
+    return list_train, list_test, n_classes, holdoutloader
 
 
 def get_iid_data(n_clients, trainset, transform, batch, n_classes):
@@ -633,7 +650,7 @@ def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
     fake_scores = np.zeros(n_epochs)
 
     total_step = len(trainloader)
-
+    print(batch_size) 
     for epoch in range(n_epochs):
         print(f'\n[!] Epoch {epoch + 1} / {n_epochs}')
         for i, data in tqdm(enumerate(trainloader)):
@@ -708,7 +725,7 @@ def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
             fake_scores[epoch] = fake_scores[epoch] * \
                 (i/(i+1.)) + fake_score.mean().data.item()*(1./(i+1.))
 
-            if (i+1) % 200 == 0:
+            if (i+2) % batch_size == 0:
                 print('Epoch [{}/{}], Step [{}/{}], d_loss: {:.4f}, g_loss: {:.4f}, D(x): {:.2f}, D(G(z)): {:.2f}'
                       .format(epoch, n_epochs, i+1, total_step, d_loss.data.item(), g_loss.data.item(),
                               real_score.mean().data.item(), fake_score.mean().data.item()))
@@ -775,6 +792,12 @@ def train_gan(G, D, criterion, d_optimizer, g_optimizer, trainloader,
 
 
 def backdoor_train(model, train_loader, optimizer, criterion, device):
+    """Returns
+    -------
+    tuple
+        train_loss, train_acc
+    """    
+
     running_loss = 0.0
     correct = 0
     total = 0
@@ -803,6 +826,11 @@ def backdoor_train(model, train_loader, optimizer, criterion, device):
 
 
 def backdoor_evaluate(model, test_loader, criterion, device):
+    """Returns
+    -------
+    tuple
+        test_loss, test_acc
+    """   
     model.eval()
     test_loss = 0
     correct = 0

@@ -13,9 +13,7 @@ parser.add_argument('--batch_size', type=int, default=20, help='batch size')
 parser.add_argument('--alpha', type=float, default=0.02, help='alpha')
 parser.add_argument('--n_clients', type=int, default=10,
                     help='number of clients')
-parser.add_argument('--dir', type=str, default='results', help='directory')
-parser.add_argument('--dir_shadow', type=str,
-                    default='shadow', help='directory')
+parser.add_argument('--dir', type=str, default='./', help='directory')
 parser.add_argument('--dataname', type=str, default='mnist',
                     choices=['mnist', 'emnist', 'fmnist'])
 parser.add_argument('--seed', type=int, default=42, help='seed')
@@ -26,10 +24,14 @@ def main():
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
+    shadow_dir = os.path.join(args.dir, 'shadow')
+    data_dir = os.path.join(args.dir, 'data')
+    results_dir = os.path.join(args.dir, 'results')
+
     # create a dataset of shadow network data
     dataset_clean = []
     for idx in range(args.n_clients):
-        path = os.path.join(args.dir_shadow,
+        path = os.path.join(shadow_dir,
                             f'{args.dataname}_client_{idx}_results.pt')
         latent_space = torch.load(path)['latent_space']
 
@@ -80,7 +82,7 @@ def main():
 
     print('[INFO]: Saving model')
     siamese_net.save(os.path.join(
-        args.dir_shadow, f'{args.dataname}_fl_siamese.h5'))
+        shadow_dir, f'{args.dataname}_fl_siamese.h5'))
     print('[INFO]: Done')
 
     if args.dataname == 'mnist':
@@ -96,7 +98,7 @@ def main():
 
     dataset_clean = []
     for idx in range(args.n_clients):
-        path = os.path.join(args.dir,
+        path = os.path.join(data_dir,
                             f'{args.dataname}_client_{idx}_results.pt')
         latent_space = torch.load(path)['latent_space']
 

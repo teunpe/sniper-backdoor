@@ -13,22 +13,19 @@ class Participant:
     '''
     Parent class of Client and Server
 
+    Parameters
+    ----------
+    testloader : torch.utils.data.DataLoader
+    dataname : string
+    n_classes : int
+
     Attributes
     ----------
-    device : torch.device
-        device on which the model runs
-    model : torch.nn.Module
-        initialized model architecture
-    testloader : torch.utils.data.DataLoader
-        test data loader
-    criterion : torch.nn.CrossEntropyLoss
-        loss criterion
     data : string
-        name of dataset
+        name of the dataset
     list_test_loss : list
-        store test losses
+        test losses stored during evaluation steps
     list_test_acc : list
-        store test accuracies
 
     Methods
     -------
@@ -83,14 +80,27 @@ class Participant:
 class Client(Participant):
     ''' Client on the FL setup
 
+    Parameters
+    ----------
+    trainloader : torch.utils.data.DataLoader
+    testloader : torch.utils.data.DataLoader
+    dataname : string, optional
+        default 'mnist'
+    n_classes : int, optional
+        default 10
+    lr : float, optional
+        default 0.01
+    momentum : float, optional
+        default 0.9
+    local_epochs : int, optional
+        default 1
+
     Attributes
     ----------
     optimizer : torch.optim.SGD
         hyperparameter optimizer
     scheduler : None
         learning rate scheduler
-    trainloader : torch.utils.data.DataLoader
-        training data loader
     local_epochs : int
         number of local epochs
     list_train_loss : list
@@ -101,18 +111,6 @@ class Client(Participant):
         unused??
     models_record : list
         state dicts saved during each epoch
-    testloader : torch.utils.data.DataLoader
-        test data loader
-    dataname : string
-        name of the dataset (default 'mnist')
-    n_classes : int
-        number of classes in the dataset
-    lr : float
-        initial learning rate (default 0.01)
-    momentum : float
-        initial momentum (default 0.9)
-    local_epochs : int
-        number of local training epochs (default 1)
 
     Methods
     -------
@@ -125,27 +123,6 @@ class Client(Participant):
     '''
 
     def __init__(self, trainloader, testloader, dataname='mnist', n_classes=10, lr=0.01, momentum=0.9, local_epochs=1):
-        '''
-        Parameters
-        ----------
-        optimizer : torch.optim.SGD
-            hyperparameter optimizer
-        scheduler : None
-            learning rate scheduler
-        trainloader : torch.utils.data.DataLoader
-            training data loader
-        local_epochs : int
-            number of local epochs
-        list_train_loss : list
-            train losses during each local epoch
-        list_train_acc : list
-            train accuracies during each local epoch
-        latent_space : list
-            unused??
-        models_record : list
-            state dicts saved during each epoch
-        '''
-
         super().__init__(testloader, dataname=dataname, n_classes=n_classes)
         self.optimizer = optim.SGD(
             self.model.parameters(), lr=lr, momentum=momentum)
@@ -201,10 +178,8 @@ class Client(Participant):
 
         Returns
         -------
-        train_loss : float
-            training loss at end of epoch
-        train_acc : float
-            training accuracy at end of epoch
+        tuple
+            train_loss, train_acc
         '''
 
         self.model.train()
@@ -242,16 +217,16 @@ class Server(Participant):
     '''
     Server in the FL setup
 
-    Attributes
+    Parameters
     ----------
     clients : list
         list of clients in the setup
-    dataname : string
-        name of the dataset (default 'mnist')
-    n_classes : int
-        number of classes in the dataset (default 10)
-    testloader : torch.utils.data.DataLoader
-        test data loader (default None)
+    dataname : string, optional
+        default 'mnist'
+    n_classes : int, optional
+        default 10
+    testloader : torch.utils.data.DataLoader, optional
+        default None
     
     Methods
     -------
@@ -261,19 +236,6 @@ class Server(Participant):
         Extracts the latent space of the server model by running a test sample through the model hidden layers 
     '''
     def __init__(self, clients, dataname='mnist', n_classes=10, testloader=None):
-        '''
-        Parameters
-        ----------
-        clients : list
-        list of clients in the setup
-        dataname : string
-            name of the dataset (default 'mnist')
-        n_classes : int
-            number of classes in the dataset (default 10)
-        testloader : torch.utils.data.DataLoader
-            test data loader (default None)
-        '''
-
         super().__init__(testloader, dataname=dataname, n_classes=n_classes)
         self.clients = clients
 

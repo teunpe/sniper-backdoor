@@ -8,18 +8,6 @@ def build_model(n_classes=10, dataname='mnist'):
 
     For CIFAR10/CIFAR100 - builds VGG11_BN.
     For others - builds a CNN with n_classes.
-
-    Parameters
-    ----------
-    n_classes : int, optional
-        number of classes in the dataset, by default 10
-    dataname : str, optional
-        name of the dataset, by default 'mnist'
-
-    Returns
-    -------
-    model : torchvision.models.Model
-        initialized model
     """
     if dataname == 'cifar10' or dataname == 'cifar100':
         # model = resnet18(weights=ResNet18_Weights.DEFAULT)
@@ -63,7 +51,6 @@ class CNN(nn.Module):
     Methods
     -------
     forward(x)
-        run input x through the model
     """    
     def __init__(self, n_classes):
         super(CNN, self).__init__()
@@ -116,7 +103,6 @@ class Discriminator(nn.Module):
     Methods
     -------
     forward(x)
-        Runs input x through the model
     """    
 
     def __init__(self, disc_dim, no_of_channels):
@@ -166,7 +152,6 @@ class Generator(nn.Module):
     Methods
     -------
     forward(x)
-        runs input x through the model
     """    
 
     def __init__(self, noise_dim, gen_dim, no_of_channels):
