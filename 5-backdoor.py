@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser('Backdoor attack')
 
 parser.add_argument('--dataname', type=str, default='mnist',
                     help='dataname', choices=['mnist', 'emnist', 'fmnist'])
-parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
+parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
 parser.add_argument('--epsilon', type=float, default=0.1, help='epsilon')
 parser.add_argument('--client_id', type=int, default=0, help='client')
