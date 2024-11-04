@@ -918,7 +918,7 @@ def backdoor_model_trainer(model, criterion, optimizer, epochs, poison_trainload
     return list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor
 
 
-def validation_per_class(model, test_loader, n_classes):
+def validation_per_class(model, test_loader, n_classes, device):
     """Compute the accuracy per class
 
     Returns
@@ -926,13 +926,14 @@ def validation_per_class(model, test_loader, n_classes):
     Tensor
         accuracy per class
     """    
+    device = torch.device(
+        'cuda:0' if torch.cuda.is_available() else 'cpu')
     model.eval()
 
     confusion_matrix = torch.zeros(n_classes, n_classes)
     with torch.no_grad():
         for i, (inputs, classes) in enumerate(test_loader):
-            print(inputs)
-            print(inputs.shape)
+            inputs, classes = inputs.to(device), classes.to(device)
             outputs = model(inputs)
             # _, preds = torch.max(outputs, 1)
             preds = outputs.argmax(dim=1)

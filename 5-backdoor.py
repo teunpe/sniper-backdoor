@@ -37,7 +37,7 @@ def main():
 
     results_dir = os.path.join(args.dir, 'results')
     datadir = os.path.join(args.dir, 'data')
-    print(results_dir)
+    
     if args.dataname == 'mnist':
         n_classes = 10
     elif args.dataname == 'emnist':
@@ -73,11 +73,11 @@ def main():
 
 
     clean_model_performance = utils.validation_per_class(
-        clean_model, test_data_ori_loader, n_classes)
+        clean_model, test_data_ori_loader, n_classes, device)
     clean_per_class = utils.validation_per_class(
-        poisoned_model, test_data_ori_loader, n_classes)
+        poisoned_model, test_data_ori_loader, n_classes, device)
     poisoned_per_class = utils.validation_per_class(
-        poisoned_model, test_data_tri_loader, n_classes)
+        poisoned_model, test_data_tri_loader, n_classes, device)
     
     succesful_attacks = poisoned_per_class[args.source_label,args.target_label]
     all_attacks = poisoned_per_class[args.source_label,:].sum()
