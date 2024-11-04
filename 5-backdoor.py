@@ -37,7 +37,7 @@ def main():
 
     results_dir = os.path.join(args.dir, 'results')
     datadir = os.path.join(args.dir, 'data')
-    
+
     if args.dataname == 'mnist':
         n_classes = 10
     elif args.dataname == 'emnist':
@@ -71,7 +71,7 @@ def main():
     list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor = backdoor_model_trainer(poisoned_model, criterion, optimizer, args.epochs,
                                                                                                                                              train_data_loader, test_data_ori_loader, test_data_tri_loader, device)
 
-
+    clean_model.to(device)
     clean_model_performance = utils.validation_per_class(
         clean_model, test_data_ori_loader, n_classes, device)
     clean_per_class = utils.validation_per_class(

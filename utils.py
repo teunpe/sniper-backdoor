@@ -935,7 +935,7 @@ def validation_per_class(model, test_loader, n_classes, device):
     with torch.no_grad():
         for i, (inputs, classes) in enumerate(test_loader):
             inputs, classes = inputs.to(device), classes.to(device)
-            print(model.device, inputs.device)
+            print(next(model.parameters()).device, inputs.device)
             outputs = model(inputs)
             # _, preds = torch.max(outputs, 1)
             preds = outputs.argmax(dim=1)
