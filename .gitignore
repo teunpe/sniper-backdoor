@@ -614,3 +614,10 @@ results/gan_fmnist/loss_0.pdf
 results/gan_fmnist/loss_1.pdf
 results/gan_fmnist/real_images.png
 results/gan_fmnist/real_scores.npy
+results/fmnist_0.001_0->1_backdoor_results.pt
+results/fmnist_0.01_0->1_backdoor_results.pt
+results/fmnist_0.1_0->1_finetuned_results.pt
+results/fmnist_0.02_0->1_backdoor_results.pt
+results/fmnist_0.005_0->1_backdoor_results.pt
+results/fmnist_0.015_0->1_backdoor_results.pt
+results/mnist_0.1_0->1_finetuned_results.pt
