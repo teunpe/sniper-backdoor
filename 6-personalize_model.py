@@ -83,7 +83,7 @@ def main():
     # get poisoned data
     train_data_loader, test_data_ori_loader, test_data_tri_loader, n_classes = create_backdoor_data_loader(args.dataname, args.target_label, args.source_label,
                                                                                                            args.epsilon, args.batch_size,
-                                                                                                           args.batch_size, device, args)
+                                                                                                           args.batch_size, device, data_dir, args)
 
     # test the finetuned model on the poisoned data
     clean_per_class = validation_per_class(
