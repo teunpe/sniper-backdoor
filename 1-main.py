@@ -104,10 +104,10 @@ def main():
         torch.save({'model': server_model.state_dict(),
                     'loss': server.list_test_loss,
                     'acc': server.list_test_acc},
-                   os.path.join(results_dir, f'{args.dataname}_server_results.pt'))
+                   os.path.join(results_dir, f'{args.dataname}_iid_{args.iid}_server_results.pt'))
 
         torch.save({'acc_clients': test_clients,
-                    'acc_server': test_server}, os.path.join(results_dir, f'{args.dataname}_average_results.pt'))
+                    'acc_server': test_server}, os.path.join(results_dir, f'{args.dataname}_iid_{args.iid}_average_results.pt'))
 
 
 if __name__ == '__main__':

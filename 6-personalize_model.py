@@ -102,7 +102,7 @@ def main():
 
     # save resulting model and test results
     path = os.path.join(
-        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_finetuned_results.pt')
+        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_finetuned_results.pt')
 
     torch.save({'train_loss': train_loss, 'train_acc': train_acc, 'test_loss': test_loss, 'test_acc': test_acc,
                'test_loss_backdoor': poison_loss, 'test_acc_backdoor': poison_acc, 'clean_per_class': clean_per_class,

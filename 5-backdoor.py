@@ -51,7 +51,7 @@ def main():
 
     poisoned_model = build_model(n_classes, args.pretrained)
     poisoned_model.load_state_dict(model)
-    
+
     clean_model = build_model(n_classes, args.pretrained)
     clean_model.load_state_dict(model)
 
@@ -97,7 +97,7 @@ def main():
 
     # Save the results
     path = os.path.join(
-        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_backdoor_results.pt')
+        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_backdoor_results.pt')
 
     torch.save({'train_loss': list_train_loss, 'train_acc': list_train_acc, 'test_loss': list_test_loss, 'test_acc': list_test_acc,
                'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,
