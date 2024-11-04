@@ -36,7 +36,7 @@ def main():
     np.random.seed(args.seed)
 
     results_dir = os.path.join(args.dir, 'results')
-
+    print(results_dir)
     if args.dataname == 'mnist':
         n_classes = 10
     elif args.dataname == 'emnist':
@@ -61,7 +61,7 @@ def main():
     poisoned_model.to(device)
     train_data_loader, test_data_ori_loader, test_data_tri_loader, n_classes = create_backdoor_data_loader(args.dataname, args.target_label, args.source_label,
                                                                                                            args.epsilon, args.batch_size,
-                                                                                                           args.batch_size, device, args)
+                                                                                                           args.batch_size, device, dir=args.dir, args=args)
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(
@@ -101,6 +101,6 @@ def main():
     torch.save({'train_loss': list_train_loss, 'train_acc': list_train_acc, 'test_loss': list_test_loss, 'test_acc': list_test_acc,
                'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,
                 'poisoned_per_class': poisoned_per_class, 'asr': asr, 'model': poisoned_model.state_dict(), 'args': args}, path)
-
+    print(path)
 if __name__ == '__main__':
     main()

@@ -125,7 +125,7 @@ class PoisonedDataset(Dataset):
 
 
 def create_backdoor_data_loader(dataname, target_label, source_label, epsilon,
-                                batch_size_train, batch_size_test, device, args=None):
+                                batch_size_train, batch_size_test, device, dir='./data', args=None):
     """Create clean and poisoned data loaders.
 
     Returns
@@ -135,9 +135,9 @@ def create_backdoor_data_loader(dataname, target_label, source_label, epsilon,
 
     """
     _, list_testloader, n_classes, _ = get_dataset(
-        args.n_clients, dataname, True, batch_size_train)
+        args.n_clients, dataname, True, batch_size_train, datadir=dir)
 
-    trainset, n_classes = get_dataset_gan(dataname, size=2048)
+    trainset, n_classes = get_dataset_gan(dataname, size=2048, datadir=dir)
 
     trainset = CustomDataset(
         trainset.dataset.data, trainset.dataset.targets, transform=trainset.dataset.transform, n_classes=n_classes)
