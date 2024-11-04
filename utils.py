@@ -928,7 +928,7 @@ def validation_per_class(model, test_loader, n_classes, device):
     """    
     device = torch.device(
         'cuda:0' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
+    model.to(device)
     model.eval()
 
     confusion_matrix = torch.zeros(n_classes, n_classes)
