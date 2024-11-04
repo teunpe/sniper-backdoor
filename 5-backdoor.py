@@ -51,7 +51,7 @@ def main():
 
     poisoned_model = build_model(n_classes, args.pretrained)
     poisoned_model.load_state_dict(model)
-
+    print(next(poisoned_model.parameters()))
     clean_model = build_model(n_classes, args.pretrained)
     clean_model.load_state_dict(model)
 
