@@ -931,7 +931,8 @@ def validation_per_class(model, test_loader, n_classes):
     confusion_matrix = torch.zeros(n_classes, n_classes)
     with torch.no_grad():
         for i, (inputs, classes) in enumerate(test_loader):
-
+            print(inputs)
+            print(inputs.shape)
             outputs = model(inputs)
             # _, preds = torch.max(outputs, 1)
             preds = outputs.argmax(dim=1)
