@@ -87,9 +87,9 @@ def main():
 
     # test the finetuned model on the poisoned data
     clean_per_class = validation_per_class(
-        model, test_data_ori_loader, n_classes)
+        model, test_data_ori_loader, n_classes, device)
     poisoned_per_class = validation_per_class(
-            model, test_data_tri_loader, n_classes)
+            model, test_data_tri_loader, n_classes, device)
     poison_loss, poison_acc = backdoor_evaluate(
                         model, test_data_tri_loader, criterion, device)
     print(f'[!] Poisoned testing accuracy: {poison_acc:.4f}')
