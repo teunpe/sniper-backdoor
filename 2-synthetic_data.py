@@ -27,7 +27,7 @@ parser.add_argument('--dir', type=str, default='./',
 parser.add_argument('--dataname', type=str, default='mnist',
                     choices=['mnist', 'emnist', 'fmnist'], help='dataname')
 parser.add_argument('--seed', type=int, default=42, help='seed')
-parser.add_argument('--iid', action='store_true', default=False, help='iid')
+parser.add_argument('--iid', type=bool, help='iid')
 parser.add_argument('--trainset_size', type=int,
                     default=1000, help='holdout dataset size')
 parser.add_argument('--pretrained', action='store_true',
