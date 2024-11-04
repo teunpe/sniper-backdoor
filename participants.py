@@ -159,7 +159,7 @@ class Client(Participant):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        path = os.path.join(path, f'{args.dataname}_client_{idx}_results.pt')
+        path = os.path.join(path, f'{args.dataname}_iid_{args.iid}_client_{idx}_results.pt')
 
         torch.save({'train_loss': self.list_train_loss,
                     'train_acc': self.list_train_acc,
