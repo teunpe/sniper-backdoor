@@ -26,7 +26,7 @@ parser.add_argument('--fake_dir', type=str)
 parser.add_argument('--n_clients', type=int, default=10)
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
 parser.add_argument('--dir', type=str, default='./', help='directory')
-parser.add_argument('--iid', action='store_true', help='iid')
+parser.add_argument('--iid', type=bool, help='iid')
 
 args = parser.parse_args()
 
@@ -46,31 +46,53 @@ def main():
 
     path = os.path.join(
         results_dir, f'{args.dataname}_server_results.pt')
-    w_model = torch.load(path)['model']
+    model = torch.load(path)['model']
 
-    model = build_model(n_classes, args.pretrained)
-    model.load_state_dict(w_model)
+    poisoned_model = build_model(n_classes, args.pretrained)
+    poisoned_model.load_state_dict(model)
+
+    clean_model = build_model(n_classes, args.pretrained)
+    clean_model.load_state_dict(model)
 
     # Load the dataset
     device = torch.device(
         'cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    model.to(device)
+    poisoned_model.to(device)
     train_data_loader, test_data_ori_loader, test_data_tri_loader, n_classes = create_backdoor_data_loader(args.dataname, args.target_label, args.source_label,
                                                                                                            args.epsilon, args.batch_size,
                                                                                                            args.batch_size, device, args)
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(
-        model.parameters(), lr=args.lr, momentum=args.momentum)
+        poisoned_model.parameters(), lr=args.lr, momentum=args.momentum)
 
-    list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor = backdoor_model_trainer(model, criterion, optimizer, args.epochs,
+    list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor = backdoor_model_trainer(poisoned_model, criterion, optimizer, args.epochs,
                                                                                                                                              train_data_loader, test_data_ori_loader, test_data_tri_loader, device)
 
+
+    clean_model_performance = utils.validation_per_class(
+        clean_model, test_data_ori_loader, n_classes)
     clean_per_class = utils.validation_per_class(
-        model, test_data_ori_loader, n_classes)
+        poisoned_model, test_data_ori_loader, n_classes)
     poisoned_per_class = utils.validation_per_class(
-        model, test_data_tri_loader, n_classes)
+        poisoned_model, test_data_tri_loader, n_classes)
+    
+    succesful_attacks = poisoned_per_class[args.source_label,args.target_label]
+    all_attacks = poisoned_per_class[args.source_label,:].sum()
+
+    asr = succesful_attacks/all_attacks
+    print(f'ASR: {asr}')
+
+    clean_per_class = clean_per_class.diag()/clean_per_class.sum(1)
+    poisoned_per_class = poisoned_per_class.diag()/poisoned_per_class.sum(1)
+
+    clean_model_accuracy = (clean_model_performance.diag()/clean_model_performance.sum(1)).mean()
+    poisoned_model_accuracy = clean_per_class.mean()
+    print(clean_model_accuracy, poisoned_model_accuracy)
+    cad = clean_model_accuracy - poisoned_model_accuracy
+    print(f'CAD: {cad}')
+
 
     # Save the results
     path = os.path.join(
@@ -78,7 +100,7 @@ def main():
 
     torch.save({'train_loss': list_train_loss, 'train_acc': list_train_acc, 'test_loss': list_test_loss, 'test_acc': list_test_acc,
                'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,
-                'poisoned_per_class': poisoned_per_class, 'model': model.state_dict(), 'args': args}, path)
+                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'model': poisoned_model.state_dict(), 'args': args}, path)
 
 if __name__ == '__main__':
     main()
