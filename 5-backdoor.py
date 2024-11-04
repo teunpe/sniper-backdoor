@@ -67,7 +67,7 @@ def main():
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(
         poisoned_model.parameters(), lr=args.lr, momentum=args.momentum)
-
+    print(f'[!] Implementing backdoor with epsilon {args.epsilon}...')
     list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor = backdoor_model_trainer(poisoned_model, criterion, optimizer, args.epochs,
                                                                                                                                              train_data_loader, test_data_ori_loader, test_data_tri_loader, device)
 
