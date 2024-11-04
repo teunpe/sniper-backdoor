@@ -6,8 +6,8 @@
 #SBATCH --mem=15G
 #SBATCH --gres=gpu:1
 #SBATCH --time=4:00:00
-#SBATCH --output=myjob-%j.out
-#SBATCH --error=myjob-%j.err
+#SBATCH --output=1.out
+#SBATCH --error=1.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user teun.peeters@ru.nl
 
