@@ -450,6 +450,7 @@ def get_iid_data(n_clients, trainset, transform, batch, n_classes):
     list_train : list
         list of train loaders (one per client)
     """
+    print("Using iid data")
     perm = np.random.permutation(len(trainset))
     split = int(len(trainset) / n_clients)
     list_train = []
@@ -490,6 +491,7 @@ def get_non_iid_data(n_clients, trainset, transform, batch, n_classes):
     list_train : list
         list of train loaders (one per client)
     """    
+    print("Using non=iid data")
     # Ensure that the number of classes is divisible by the number of clients, so they have the same amount of labels
     assert n_classes % n_clients == 0
     class_per_client = int(n_classes/n_clients)
@@ -937,9 +939,7 @@ def validation_per_class(model, test_loader, n_classes):
             for t, p in zip(preds, classes.argmax(dim=1)):
                 confusion_matrix[t.long(), p.long()] += 1
 
-    print(confusion_matrix.diag()/confusion_matrix.sum(1))
-
-    return confusion_matrix.diag()/confusion_matrix.sum(1)
+    return confusion_matrix
 
 
 def plot_acc(clients_acc_test, server_acc, num_users: int, path, dataname):
