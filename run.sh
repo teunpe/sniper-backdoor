@@ -12,9 +12,9 @@
 #SBATCH --mail-user teun.peeters@ru.nl
 
 
-DATAS='mnist, emnist, fmnist'
+DATAS="mnist emnist fmnist"
 
-if [[$DATAS == *"mnist"*]]; then
+if [[ $DATAS == *"mnist"* ]]; then
     CLIENTS=5
     EPOCHS=50
     LOCAL_EPOCHS=2
