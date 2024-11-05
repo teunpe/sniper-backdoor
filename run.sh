@@ -12,30 +12,31 @@
 #SBATCH --mail-user teun.peeters@ru.nl
 
 CLIENTS=5
-EPOCHS=50
-LOCAL_EPOCHS=2
+EPOCHS=200
+LOCAL_EPOCHS=1
 DATA=mnist
-IID=true
+IID="--iid"
 # DIR='./'
 DIR='//vol/csedu-nobackup/project/tpeeters'
-LR=0.1
+LR=0.00001
+MOMENTUM=0.0
 
 # conda init
 # conda activate intern
 source //vol/csedu-nobackup/project/tpeeters/venv/bin/activate
 
-python 1-main.py --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR --iid $IID --dir $DIR || exit
-python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 --iid $IID --dir $DIR || exit
-python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS --iid $IID || exit
-python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
-python 5-backdoor.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 --iid $IID --dir $DIR || exit
-python 5-backdoor.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 --iid $IID --dir $DIR || exit
-python 5-backdoor.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 --iid $IID --dir $DIR || exit
-python 5-backdoor.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 --iid $IID --dir $DIR || exit
-python 5-backdoor.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 --iid $IID --dir $DIR || exit
-python 6-personalize_model.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 --iid $IID --dir $DIR || exit
-python 6-personalize_model.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 --iid $IID --dir $DIR || exit
-python 6-personalize_model.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 --iid $IID --dir $DIR || exit
-python 6-personalize_model.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 --iid $IID --dir $DIR || exit
-python 6-personalize_model.py --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 --iid $IID --dir $DIR || exit
+python 1-main.py --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
+# python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
+# python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
+# python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
+python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR || exit
+python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR || exit
+python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR || exit
+python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR || exit
+python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR || exit
+python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR --momentum $MOMENTUM || exit
+python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR --momentum $MOMENTUM || exit
+python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR --momentum $MOMENTUM || exit
+python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR --momentum $MOMENTUM || exit
+python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR --momentum $MOMENTUM || exit
 
