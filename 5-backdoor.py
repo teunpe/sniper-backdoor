@@ -26,7 +26,7 @@ parser.add_argument('--fake_dir', type=str)
 parser.add_argument('--n_clients', type=int, default=10)
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
 parser.add_argument('--dir', type=str, default='./', help='directory')
-parser.add_argument('--iid', type=bool, help='iid')
+parser.add_argument('--iid', action="store_true", help='iid')
 
 args = parser.parse_args()
 

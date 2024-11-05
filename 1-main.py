@@ -22,7 +22,7 @@ parser.add_argument('--n_local_epochs', type=int,
 parser.add_argument('--batch_size', type=int, default=64,
                     help='batch size')
 parser.add_argument('--seed', type=int, default=1, help='seed')
-parser.add_argument('--iid', type=bool, default=False, help='iid')
+parser.add_argument('--iid', action="store_true", help='iid')
 parser.add_argument('--trainset_size', type=int,
                     default=1000, help='holdout dataset size')
 parser.add_argument('--warm', action='store_true',
@@ -34,6 +34,8 @@ args = parser.parse_args()
 def main():
     data_dir = os.path.join(args.dir, 'data')
     results_dir = os.path.join(args.dir, 'results')
+
+    print(args.iid)
 
     # Initialize lists to keep track of accuracies
     test_clients = []
