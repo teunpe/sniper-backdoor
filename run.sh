@@ -12,9 +12,9 @@
 #SBATCH --mail-user teun.peeters@ru.nl
 
 
-DATAS="mnist emnist fmnist"
+DATAS="mmnist emnist fmnist"
 
-if [[ $DATAS == *"mnist"* ]]; then
+if [[ $DATAS == *"mmnist"* ]]; then
     CLIENTS=5
     EPOCHS=50
     LOCAL_EPOCHS=2
@@ -45,7 +45,7 @@ if [[ $DATAS == *"mnist"* ]]; then
     python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR --momentum $MOMENTUM || exit
 fi
 
-if [[$DATAS == *"emnist"*]]; then
+if [[ $DATAS == *"emnist"* ]]; then
     CLIENTS=13
     EPOCHS=200
     LOCAL_EPOCHS=2
@@ -76,7 +76,7 @@ if [[$DATAS == *"emnist"*]]; then
     python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR --momentum $MOMENTUM || exit
 fi
 
-if [[$DATAS == *"fmnist"*]]; then
+if [[ $DATAS == *"fmnist"* ]]; then
     CLIENTS=5
     EPOCHS=200
     LOCAL_EPOCHS=1
