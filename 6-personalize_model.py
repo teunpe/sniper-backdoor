@@ -44,7 +44,7 @@ def main():
 
     # load the backdoored model
     path = os.path.join(
-        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_backdoor_results.pt')
+        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_backdoor_results.pt')
     results = torch.load(path)
 
     weights_model = results['model']

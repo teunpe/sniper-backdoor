@@ -46,7 +46,7 @@ def main():
         n_classes = 10
 
     path = os.path.join(
-        results_dir, f'{args.dataname}_server_results.pt')
+        results_dir, f'{args.dataname}_iid_{args.iid}_server_results.pt')
     model = torch.load(path)['model']
 
     poisoned_model = build_model(n_classes, args.pretrained)
