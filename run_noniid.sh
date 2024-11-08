@@ -12,7 +12,7 @@
 #SBATCH --mail-user teun.peeters@ru.nl
 
 
-DATAS="emnist fmnist"
+DATAS="mnist emnist fmnist"
 TEST_FREQ=1
 
 # if [[ $DATAS == *"mmnist"* ]]; then

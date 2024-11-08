@@ -12,7 +12,7 @@
 #SBATCH --mail-user teun.peeters@ru.nl
 
 
-DATAS="emnist fmnist"
+DATAS="mnist emnist fmnist"
 
 if [[ $DATAS == *"mmnist"* ]]; then
     CLIENTS=5
