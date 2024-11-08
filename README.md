@@ -5,12 +5,12 @@ Code for my research internship, based on the paper "Sniper Backdoor: Single Cli
 
 The project can be run sequentially using the bash scripts for i.i.d. data and non i.i.d. data. The bash scripts are set up to use a local conda venv, which can be prepared using requirements.txt. 
 
-### IID
+**IID**
 ```bash
 run.sh
 ```
 
-### Non-IID
+**Non-IID**
 ```bash
 run_noniid.sh
 ```
@@ -20,3 +20,4 @@ It is also possible to run the steps of the project as individual parts, as resu
 python 1-main.py --dataname mnist --n_clients 10 --n_epochs 5 --lr 0.1 --iid --dir './' --momentum 0.9
 ```
 
+A jupyter notebook is included that can be used to perform analysis of the results (`testspace.ipynb`)

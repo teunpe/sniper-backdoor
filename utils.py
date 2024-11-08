@@ -341,6 +341,7 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
 
         trainset.targets = trainset.targets - 1
         testset.targets = testset.targets - 1
+        holdoutset.targets = holdoutset.targets - 1
 
     elif dataname == 'fmnist':
         n_classes = 10
