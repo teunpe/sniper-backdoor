@@ -51,6 +51,9 @@ def main():
     model = build_model(n_classes, args.pretrained)
     model.load_state_dict(weights_model)
 
+    clean_model = build_model(n_classes, args.pretrained)
+    clean_model.load_state_dict(model)
+
     device = torch.device(
         'cuda:0' if torch.cuda.is_available() else 'cpu')
     model.to(device)
@@ -86,6 +89,9 @@ def main():
                                                                                                            args.batch_size, device, data_dir, args)
 
     # test the finetuned model on the poisoned data
+    clean_model.to(device)
+    clean_model_performance = validation_per_class(
+        clean_model, test_data_ori_loader, n_classes, device)
     clean_per_class = validation_per_class(
         model, test_data_ori_loader, n_classes, device)
     poisoned_per_class = validation_per_class(
@@ -100,13 +106,28 @@ def main():
     asr = succesful_attacks/all_attacks
     print(f'ASR: {asr}')
 
+    clean_per_class = clean_per_class.diag()/clean_per_class.sum(1)
+    poisoned_per_class = poisoned_per_class.diag()/poisoned_per_class.sum(1)
+
+    clean_model_accuracy = (clean_model_performance.diag()/clean_model_performance.sum(1)).mean()
+    poisoned_model_accuracy = clean_per_class.mean()
+    print(clean_model_accuracy, poisoned_model_accuracy)
+    cad = clean_model_accuracy - poisoned_model_accuracy
+    print(f'CAD: {cad}')
+
     # save resulting model and test results
     path = os.path.join(
         results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_finetuned_results.pt')
 
     torch.save({'train_loss': train_loss, 'train_acc': train_acc, 'test_loss': test_loss, 'test_acc': test_acc,
                'test_loss_backdoor': poison_loss, 'test_acc_backdoor': poison_acc, 'clean_per_class': clean_per_class,
-                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'model': model.state_dict(), 'args': args}, path)
+                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': model.state_dict(), 'args': args}, path)
+    
+    path = os.path.join(
+        results_dir, f'clean_{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_finetuned_results.pt')
+
+    torch.save({'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': model.state_dict(), 'args': args}, path)
+    
 
 if __name__ == '__main__':
     main()

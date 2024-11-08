@@ -520,7 +520,7 @@ def get_non_iid_data(n_clients, trainset, transform, batch, n_classes):
     return list_train
 
 
-def trainer(clients, server, epochs):
+def trainer(clients, server, epochs, test_freq=999):
     """Run the training loop over the clients and server for the given number of epochs.
 
     Parameters
@@ -546,7 +546,7 @@ def trainer(clients, server, epochs):
             # Record the train loss and accuracy every other epoch
             print(f'\n[!] Training loss: {train_loss:.4f}')
             print(f'[!] Training accuracy: {train_acc:.4f}')
-            if epoch % 2 == 0:
+            if (epoch+1) % test_freq == 0:
                 test_loss, test_acc = client.evaluate()
                 print(f'[!] Testing accuracy: {test_acc:.4f}')
 
@@ -564,7 +564,7 @@ def trainer(clients, server, epochs):
         server.fedavg()
 
         # Save the test loss and accuracy every other epoch
-        if epoch % 2 == 0:
+        if (epoch+1) % test_freq == 0:
             test_loss, test_acc = server.evaluate()
             print(f'[!] Server testing accuracy: {test_acc:.4f}')
 
