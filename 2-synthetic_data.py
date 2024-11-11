@@ -32,6 +32,7 @@ parser.add_argument('--trainset_size', type=int,
                     default=1000, help='holdout dataset size')
 parser.add_argument('--pretrained', action='store_true',
                     default=False, help='load a pretrained model')
+parser.add_argument('--run_name', type=str, default='')
 
 args = parser.parse_args()
 
@@ -44,7 +45,7 @@ def main():
         'cuda:0' if torch.cuda.is_available() else 'cpu')
     
     data_dir = os.path.join(args.dir, 'data')
-    results_dir = os.path.join(args.dir, 'results')
+    results_dir = os.path.join(args.dir, 'results', args.run_name)
 
     trainloader, n_classes = get_dataset_gan(
         args.dataname, args.batch_size, args.trainset_size, datadir=data_dir)

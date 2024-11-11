@@ -24,6 +24,7 @@ parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
 parser.add_argument('--finetuning_epochs', type=int, default=1, help='number of epochs in finetuning step')
 parser.add_argument('--dir', type=str, default='./', help='directory')
 parser.add_argument('--iid', action="store_true", help='iid')
+parser.add_argument('--run_name', type=str, default='')
 
 args = parser.parse_args()
 
@@ -33,7 +34,7 @@ def main():
     np.random.seed(args.seed)
 
     data_dir = os.path.join(args.dir, 'data')
-    results_dir = os.path.join(args.dir, 'results')
+    results_dir = os.path.join(args.dir, 'results', args.run_name)
 
     if args.dataname == 'mnist':
         n_classes = 10
@@ -52,7 +53,7 @@ def main():
     model.load_state_dict(weights_model)
 
     clean_model = build_model(n_classes, args.pretrained)
-    clean_model.load_state_dict(model)
+    clean_model.load_state_dict(weights_model)
 
     device = torch.device(
         'cuda:0' if torch.cuda.is_available() else 'cpu')

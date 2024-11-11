@@ -29,12 +29,13 @@ parser.add_argument('--warm', action='store_true',
                     default=False, help='Warm-up for Non-IID')
 parser.add_argument('--dir', type=str, default='./')
 parser.add_argument('--test_freq', type=int, default=999)
+parser.add_argument('--run_name', type=str, default='')
 args = parser.parse_args()
 
 
 def main():
     data_dir = os.path.join(args.dir, 'data')
-    results_dir = os.path.join(args.dir, 'results')
+    results_dir = os.path.join(args.dir, 'results', args.run_name)
 
     print(args.iid)
 

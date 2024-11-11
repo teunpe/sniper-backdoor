@@ -27,6 +27,7 @@ parser.add_argument('--n_clients', type=int, default=10)
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
 parser.add_argument('--dir', type=str, default='./', help='directory')
 parser.add_argument('--iid', action="store_true", help='iid')
+parser.add_argument('--run_name', type=str, default='')
 
 args = parser.parse_args()
 
@@ -35,7 +36,7 @@ def main():
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
-    results_dir = os.path.join(args.dir, 'results')
+    results_dir = os.path.join(args.dir, 'results', args.run_name)
     datadir = os.path.join(args.dir, 'data')
 
     if args.dataname == 'mnist':
