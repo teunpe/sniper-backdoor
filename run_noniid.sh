@@ -12,25 +12,25 @@
 #SBATCH --mail-user teun.peeters@ru.nl
 
 
-DATAS="mnist emnist fmnist"
+DATAS="mmnist emnist fmnist"
+RUN_NAME="optimalize"
+IID=""
+DIR='//vol/csedu-nobackup/project/tpeeters'
 TEST_FREQ=1
 
-# if [[ $DATAS == *"mmnist"* ]]; then
+# conda init
+# conda activate intern
+source //vol/csedu-nobackup/project/tpeeters/venv/bin/activate
+
+if [[ $DATAS == *"mmnist"* ]]; then
     CLIENTS=5
     EPOCHS=50
     LOCAL_EPOCHS=2
     DATA=mnist
-    IID=""
-    # DIR='./'
-    DIR='//vol/csedu-nobackup/project/tpeeters'
     LR=0.1
     MOMENTUM=0.9
 
-    # conda init
-    # conda activate intern
-    source //vol/csedu-nobackup/project/tpeeters/venv/bin/activate
-
-    python 1-main.py --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 1-main.py --run_name $RUN_NAME --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
     # python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
     # python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
     # python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
@@ -51,17 +51,10 @@ if [[ $DATAS == *"emnist"* ]]; then
     EPOCHS=200
     LOCAL_EPOCHS=2
     DATA=emnist
-    IID=""
-    # DIR='./'
-    DIR='//vol/csedu-nobackup/project/tpeeters'
     LR=0.01
     MOMENTUM=0.9
 
-    # conda init
-    # conda activate intern
-    source //vol/csedu-nobackup/project/tpeeters/venv/bin/activate
-
-    python 1-main.py --warm --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 1-main.py --run_name $RUN_NAME --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
     # python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
     # python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
     # python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
@@ -82,17 +75,10 @@ if [[ $DATAS == *"fmnist"* ]]; then
     EPOCHS=200
     LOCAL_EPOCHS=1
     DATA=fmnist
-    IID=""
-    # DIR='./'
-    DIR='//vol/csedu-nobackup/project/tpeeters'
     LR=0.00001
     MOMENTUM=0.0
 
-    # conda init
-    # conda activate intern
-    source //vol/csedu-nobackup/project/tpeeters/venv/bin/activate
-
-    python 1-main.py --warm --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 1-main.py --run_name $RUN_NAME --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
     # python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
     # python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
     # python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
