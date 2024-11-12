@@ -102,7 +102,7 @@ def main():
 
     torch.save({'train_loss': list_train_loss, 'train_acc': list_train_acc, 'test_loss': list_test_loss, 'test_acc': list_test_acc,
                'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,
-                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'model': poisoned_model.state_dict(), 'args': args}, path)
+                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': poisoned_model.state_dict(), 'args': args}, path)
     print(path)
 if __name__ == '__main__':
     main()
