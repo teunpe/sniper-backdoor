@@ -13,10 +13,10 @@
 
 
 DATAS="mmnist emnist fmnist"
-RUN_NAME="optimalize"
+RUN_NAME="mnist"
 IID=""
 DIR='//vol/csedu-nobackup/project/tpeeters'
-TEST_FREQ=1
+TEST_FREQ=999
 
 # conda init
 # conda activate intern
@@ -34,16 +34,16 @@ if [[ $DATAS == *"mmnist"* ]]; then
     # python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
     # python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
     # python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR --momentum $MOMENTUM || exit
 fi
 
 if [[ $DATAS == *"emnist"* ]]; then
@@ -58,16 +58,16 @@ if [[ $DATAS == *"emnist"* ]]; then
     # python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
     # python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
     # python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR --momentum $MOMENTUM || exit
 fi
 
 if [[ $DATAS == *"fmnist"* ]]; then
@@ -82,16 +82,16 @@ if [[ $DATAS == *"fmnist"* ]]; then
     # python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
     # python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
     # python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR || exit
-    # python 5-backdoor.py --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR --momentum $MOMENTUM || exit
-    # python 6-personalize_model.py --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR || exit
+    python 5-backdoor.py --run_name $RUN_NAME --lr 0.001 --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.001 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.005 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.010 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.015 $IID --dir $DIR --momentum $MOMENTUM || exit
+    python 6-personalize_model.py --run_name $RUN_NAME --lr $LR --n_clients $CLIENTS --dataname $DATA --epsilon 0.020 $IID --dir $DIR --momentum $MOMENTUM || exit
 fi
 
 
