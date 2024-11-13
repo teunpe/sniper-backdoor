@@ -27,7 +27,7 @@ parser.add_argument('--dir', type=str, default='./', help='directory')
 args = parser.parse_args()
 
 
-def main():
+def main(args):
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 

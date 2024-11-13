@@ -28,7 +28,7 @@ parser.add_argument('--run_name', type=str, default='')
 
 args = parser.parse_args()
 
-def main():
+def main(args):
     # set up args
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
