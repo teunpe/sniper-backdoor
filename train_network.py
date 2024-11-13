@@ -8,32 +8,8 @@ import numpy as np
 from models import build_model
 from torch import optim, nn
 
-parser = argparse.ArgumentParser(description='Client wise backdoor')
-parser.add_argument('--n_clients', type=int, default=10,
-                    help='number of clients')
-parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
-parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
-parser.add_argument('--dataname', type=str, default='mnist',
-                    choices=['mnist', 'emnist', 'fmnist', 'cifar10', 'cifar100'])
-parser.add_argument('--n_epochs', type=int, default=10,
-                    help='number of epochs')
-parser.add_argument('--n_local_epochs', type=int,
-                    default=1, help='number of local epochs')
-parser.add_argument('--batch_size', type=int, default=64,
-                    help='batch size')
-parser.add_argument('--seed', type=int, default=1, help='seed')
-parser.add_argument('--iid', action="store_true", help='iid')
-parser.add_argument('--trainset_size', type=int,
-                    default=1000, help='holdout dataset size')
-parser.add_argument('--warm', action='store_true',
-                    default=False, help='Warm-up for Non-IID')
-parser.add_argument('--dir', type=str, default='./')
-parser.add_argument('--test_freq', type=int, default=999)
-parser.add_argument('--run_name', type=str, default='')
-args = parser.parse_args()
 
-
-def main():
+def main(args):
     data_dir = os.path.join(args.dir, 'data')
     results_dir = os.path.join(args.dir, 'results', args.run_name)
 
@@ -52,18 +28,30 @@ def main():
             args.n_clients, args.dataname, args.iid, args.batch_size, args.trainset_size, data_dir)
 
 
-
+        t = torch.cuda.get_device_properties(0).total_memory
+        r = torch.cuda.memory_reserved(0)
+        a = torch.cuda.memory_allocated(0)
+        f = r-a  # free inside reserved
+        print(t,r,a,f)
         clients = []
         for train, test in zip(list_trainloader, list_testloader):
             clients.append(Client(trainloader=train, testloader=test,
                                   lr=args.lr, momentum=args.momentum,
                                   dataname=args.dataname, n_classes=n_classes,
                                   local_epochs=args.n_local_epochs))
-
+        t = torch.cuda.get_device_properties(0).total_memory
+        r = torch.cuda.memory_reserved(0)
+        a = torch.cuda.memory_allocated(0)
+        f = r-a  # free inside reserved
+        print(t, r, a, f)
         server = Server(
             clients=clients, dataname=args.dataname, n_classes=n_classes,
             testloader=copy.deepcopy(list_testloader[0]))
-
+        t = torch.cuda.get_device_properties(0).total_memory
+        r = torch.cuda.memory_reserved(0)
+        a = torch.cuda.memory_allocated(0)
+        f = r-a  # free inside reserved
+        print(t, r, a, f)
         print(server.device)
         if args.warm:
             # If we are in the warm up model we train the model for few epochs in the 5% of the dataset

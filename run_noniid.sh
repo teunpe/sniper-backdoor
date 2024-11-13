@@ -30,7 +30,7 @@ if [[ $DATAS == *"mmnist"* ]]; then
     LR=0.1
     MOMENTUM=0.9
 
-    python 1-main.py --run_name $RUN_NAME --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
+    # python 1-main.py --run_name $RUN_NAME --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
     # python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
     # python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
     # python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
@@ -54,7 +54,7 @@ if [[ $DATAS == *"emnist"* ]]; then
     LR=0.01
     MOMENTUM=0.9
 
-    python 1-main.py --run_name $RUN_NAME --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
+    # python 1-main.py --run_name $RUN_NAME --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
     # python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
     # python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
     # python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit
@@ -78,7 +78,7 @@ if [[ $DATAS == *"fmnist"* ]]; then
     LR=0.00001
     MOMENTUM=0.0
 
-    python 1-main.py --run_name $RUN_NAME --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
+    # python 1-main.py --run_name $RUN_NAME --test_freq $TEST_FREQ --dataname $DATA --n_clients $CLIENTS --n_epochs $EPOCHS --lr $LR $IID --dir $DIR --momentum $MOMENTUM || exit
     # python 2-synthetic_data.py --dataname $DATA --n_clients $CLIENTS --n_epochs 950 $IID --dir $DIR || exit
     # python 3-shadow_network.py --dataname $DATA - --n_epochs $EPOCHS $IID || exit
     # python 4-client_identification.py --epochs $EPOCHS --n_clients $CLIENTS --dataname $DATA || exit

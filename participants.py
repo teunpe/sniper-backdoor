@@ -140,7 +140,7 @@ class Client(Participant):
         '''
         self.models_record.append(self.model.state_dict())
 
-    def save_model(self, idx, args, path='results'):
+    def save_model(self, idx, dataname, iid, path='results'):
         '''
         Makes a local save of the model.
 
@@ -159,15 +159,14 @@ class Client(Participant):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        path = os.path.join(path, f'{args.dataname}_iid_{args.iid}_client_{idx}_results.pt')
+        path = os.path.join(path, f'{dataname}_iid_{iid}_client_{idx}_results.pt')
 
         torch.save({'train_loss': self.list_train_loss,
                     'train_acc': self.list_train_acc,
                     'test_loss': self.list_test_loss,
                     'test_acc': self.list_test_acc,
                     'model_records': self.models_record,
-                    'latent_space': self.latent_space,
-                    'args': args},
+                    'latent_space': self.latent_space},
                    path)
 
     def train(self):

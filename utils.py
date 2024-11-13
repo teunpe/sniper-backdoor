@@ -375,6 +375,8 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
                            download=True)
         testset = CIFAR10(root=datadir, train=False,
                           download=True)
+        holdoutset = CIFAR10(root=datadir, train=True,
+                             download=True)
 
     elif dataname == 'cifar100':
         n_classes = 100
@@ -390,6 +392,8 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
                             download=True)
         testset = CIFAR100(root=datadir, train=False,
                            download=True)
+        holdoutset = CIFAR100(root=datadir, train=True,
+                             download=True)
     else:
         raise ValueError(f'Dataset {dataname} not supported')
 
@@ -398,10 +402,15 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
         trainset.targets = torch.Tensor(trainset.targets)
     if type(trainset.data) != torch.Tensor:
         trainset.data = torch.Tensor(trainset.data)
+    if type(holdoutset.targets) != torch.Tensor:
+        holdoutset.targets = torch.Tensor(holdoutset.targets)
+    if type(holdoutset.data) != torch.Tensor:
+        holdoutset.data = torch.Tensor(holdoutset.data)
 
     perm = np.random.permutation(len(trainset))[size:]
 
     holdoutperm = perm[:size]
+    print(type(holdoutperm[0]))
     holdoutset.data = holdoutset.data[holdoutperm]
     holdoutset.targets = holdoutset.targets[holdoutperm]
 
