@@ -72,17 +72,25 @@ class global_args():
                 self.n_epochs = 200
                 self.n_local_epochs = 1
                 self.iid = iid
+            if dataname=='cifar':
+                 self.n_clients = 10
+                 self.lr = 0.001
+                 self.momentum = 0.9
+                 self.dataname = 'cifar'
+                 self.n_epochs = 23
+                 self.n_local_epochs = 1
+                 self.iid = iid
 
 def main():
-    datanames = ['emnist']    
+    datanames = ['cifar']    
     args = global_args()
-    args.run_name = 'multiple_targets' 
+    args.run_name = 'cifar' 
     args.dir = '//vol/csedu-nobackup/project/tpeeters'
     args.train = False
-    tqdm_file = open(f'emnist_{args.run_name}_progress.txt','w')
+    tqdm_file = open(f'{args.run_name}_progress.txt','w')
 
-    sources = range(10)
-    targets = range(10)
+    sources = [0]
+    targets = [1]
 
     for dataname in tqdm(datanames,file=tqdm_file, desc='data',leave=False):
         args.dataname = dataname
