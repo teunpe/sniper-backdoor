@@ -82,11 +82,11 @@ class global_args():
                  self.iid = iid
 
 def main():
-    datanames = ['cifar']    
+    datanames = ['cifar100']    
     args = global_args()
     args.run_name = 'cifar' 
     args.dir = '//vol/csedu-nobackup/project/tpeeters'
-    args.train = False
+    args.train = True
     tqdm_file = open(f'{args.run_name}_progress.txt','w')
 
     sources = [0]
@@ -97,7 +97,7 @@ def main():
 
         for iid in tqdm([True, False],file=tqdm_file, desc='iid',leave=False):
             args.set_args(dataname, iid)
-
+            args.n_epochs = 5
             if args.train:
                     print(f'[!] Training network on {args.dataname} with iid {args.iid}')
                     train_network.main(args)
@@ -111,7 +111,7 @@ def main():
                     args.target_label = target
                     args.source_label = source
 
-                    for epsilon in tqdm([0.001, 0.005, 0.010, 0.015, 0.020],file=tqdm_file, desc='eps',leave=False):
+                    for epsilon in tqdm([0.050, 0.100, 0.200, 0.400, 0.800],file=tqdm_file, desc='eps',leave=False):
                         args.epsilon = epsilon
                         
                         print(f'[!] Training backdoored model on {args.dataname} with iid {args.iid},'

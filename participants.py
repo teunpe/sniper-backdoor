@@ -158,9 +158,7 @@ class Client(Participant):
 
         if not os.path.exists(path):
             os.makedirs(path)
-
         path = os.path.join(path, f'{dataname}_iid_{iid}_client_{idx}_results.pt')
-
         torch.save({'train_loss': self.list_train_loss,
                     'train_acc': self.list_train_acc,
                     'test_loss': self.list_test_loss,
@@ -186,7 +184,7 @@ class Client(Participant):
             running_loss = 0.0
             correct = 0
             total = 0
-            for (data, target) in tqdm(self.trainloader):
+            for (data, target) in self.trainloader:
                 data, target = data.to(self.device), target.to(self.device)
                 self.optimizer.zero_grad()
                 output = self.model(data)
@@ -254,24 +252,25 @@ class Server(Participant):
         assert len(model_weights) == len(num_training_samples)
         new_weights = []
         total_training_samples = sum(num_training_samples)
-        
+
         # Compute the average of the model weights over all clients
         for layers in zip(*model_weights):
-            weighted_layers = torch.stack(
-                [torch.mul(l, w) for l, w in zip(layers, num_training_samples)])
+            w_l = []
+            for l, w in zip(layers, num_training_samples):
+                l = l.cpu()
+                w_l.append(torch.mul(l,w))
+            weighted_layers = torch.stack(w_l).cpu()
             averaged_layers = torch.div(
-                torch.sum(weighted_layers, dim=0), total_training_samples)
+                torch.sum(weighted_layers, dim=0), total_training_samples).cpu()
             new_weights.append(averaged_layers)
-            
         # Load the resulting state dict
         self.model.load_state_dict(OrderedDict(zip(
             self.model.state_dict().keys(), new_weights)))
-        
         # Move the state dict to the clients
         for client in self.clients:
             client.model.load_state_dict(
                 OrderedDict(zip(self.model.state_dict().keys(), new_weights)))
-
+        
     def extract_latent_space(self):
         '''
         Extract the latent space of the server model

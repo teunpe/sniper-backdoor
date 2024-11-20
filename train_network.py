@@ -27,32 +27,17 @@ def main(args):
         list_trainloader, list_testloader, n_classes, holdoutloader = get_dataset(
             args.n_clients, args.dataname, args.iid, args.batch_size, args.trainset_size, data_dir)
 
-
-        t = torch.cuda.get_device_properties(0).total_memory
-        r = torch.cuda.memory_reserved(0)
-        a = torch.cuda.memory_allocated(0)
-        f = r-a  # free inside reserved
-        print(t,r,a,f)
         clients = []
         for train, test in zip(list_trainloader, list_testloader):
             clients.append(Client(trainloader=train, testloader=test,
                                   lr=args.lr, momentum=args.momentum,
                                   dataname=args.dataname, n_classes=n_classes,
                                   local_epochs=args.n_local_epochs))
-        t = torch.cuda.get_device_properties(0).total_memory
-        r = torch.cuda.memory_reserved(0)
-        a = torch.cuda.memory_allocated(0)
-        f = r-a  # free inside reserved
-        print(t, r, a, f)
+
         server = Server(
             clients=clients, dataname=args.dataname, n_classes=n_classes,
             testloader=copy.deepcopy(list_testloader[0]))
-        t = torch.cuda.get_device_properties(0).total_memory
-        r = torch.cuda.memory_reserved(0)
-        a = torch.cuda.memory_allocated(0)
-        f = r-a  # free inside reserved
-        print(t, r, a, f)
-        print(server.device)
+
         if args.warm:
             # If we are in the warm up model we train the model for few epochs in the 5% of the dataset
             trainloader, testloader, n_classes = get_entire_dataset(
@@ -90,7 +75,7 @@ def main(args):
 
         # Save the state dicts and performance of each client in each epoch
         for idx, client in enumerate(clients):
-            client.save_model(idx, args, results_dir)
+            client.save_model(idx, args.dataname, args.iid, results_dir)
 
         # Save the server results
         torch.save({'model': server_model.state_dict(),

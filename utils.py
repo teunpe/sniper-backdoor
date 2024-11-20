@@ -9,7 +9,7 @@ import torch
 import os
 import matplotlib.pyplot as plt
 import pylab
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import seaborn as sns
 
 
@@ -544,7 +544,7 @@ def trainer(clients, server, epochs, test_freq=999):
     print(f'\n[!] Training the model for {epochs} epochs')
 
     # train the model for the number of epochs
-    for epoch in range(epochs):
+    for epoch in tqdm(range(epochs)):
         print(f'\n[!] Epoch {epoch + 1} / {epochs}')
 
         for i, client in enumerate(clients):
@@ -570,6 +570,11 @@ def trainer(clients, server, epochs, test_freq=999):
 
         # Perform fedavg
         print(f'[!] Averaging')
+        t = torch.cuda.get_device_properties(0).total_memory
+        r = torch.cuda.memory_reserved(0)
+        a = torch.cuda.memory_allocated(0)
+        f = r-a  # free inside reserved
+        print(f'before average - total: {t:3f}, reserved: {r:3f}, allocated: {a:3f}, free: {f:3f}')
         server.fedavg()
 
         # Save the test loss and accuracy every other epoch
