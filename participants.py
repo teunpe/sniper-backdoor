@@ -7,6 +7,9 @@ import torch
 import os
 from torchvision.models.resnet import ResNet
 from torchvision.models.vgg import VGG
+import gc
+from copy import deepcopy
+import psutil
 
 
 class Participant:
@@ -36,8 +39,9 @@ class Participant:
     def __init__(self, testloader, dataname='mnist', n_classes=10):
         self.device = torch.device(
             'cuda:0' if torch.cuda.is_available() else 'cpu')
+        # self.cpu = torch.device('cpu')
         self.model = build_model(
-            n_classes=n_classes, dataname=dataname).to(self.device)
+            n_classes=n_classes, dataname=dataname).to('cpu')
         self.testloader = testloader
         self.criterion = nn.CrossEntropyLoss()
         self.data = dataname
@@ -56,6 +60,8 @@ class Participant:
         test_acc : float
             test accuracy
         '''
+        print('VALIDATING...')
+        self.model.to(self.device)
         test_loss = 0
         correct = 0
         with torch.no_grad():
@@ -63,7 +69,7 @@ class Participant:
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.model(data)
                 test_loss += self.criterion(output,
-                                            torch.argmax(target, dim=1))
+                                            torch.argmax(target, dim=1)).detach()
                 _, pred = output.max(1)
                 correct += pred.eq(torch.argmax(target,
                                                 dim=1)).sum().item()
@@ -73,6 +79,7 @@ class Participant:
 
         self.list_test_loss.append(test_loss)
         self.list_test_acc.append(test_acc)
+        self.model.to('cpu')
 
         return test_loss, test_acc
 
@@ -133,12 +140,18 @@ class Client(Participant):
         self.list_train_acc = []
         self.latent_space = []
         self.models_record = []
+        self.epoch = 0
 
-    def record_model(self):
+    def record_model(self, i, epoch, path):
         '''
         Saves the state dict of the model in the model_records list
         '''
-        self.models_record.append(self.model.state_dict())
+        if not os.path.exists(path):
+            os.makedirs(path)
+        path = os.path.join(path, f'client_{i}_epoch_{epoch}_record.pt')
+        torch.save({'model_record': self.model.state_dict()},
+                   path)
+        self.epoch = epoch
 
     def save_model(self, idx, dataname, iid, path='results'):
         '''
@@ -155,15 +168,21 @@ class Client(Participant):
         path : string
             path to save the model (default is 'results')
         '''
-
         if not os.path.exists(path):
             os.makedirs(path)
+
+        model_records = []
+        for i in range(self.epoch):
+            current_path = os.path.join(path, f'client_{idx}_epoch_{i}_record.pt')
+            state_dict = torch.load(current_path)['model_record']
+            model_records.append(state_dict)
+
         path = os.path.join(path, f'{dataname}_iid_{iid}_client_{idx}_results.pt')
         torch.save({'train_loss': self.list_train_loss,
                     'train_acc': self.list_train_acc,
                     'test_loss': self.list_test_loss,
                     'test_acc': self.list_test_acc,
-                    'model_records': self.models_record,
+                    'model_records': model_records,
                     'latent_space': self.latent_space},
                    path)
 
@@ -178,12 +197,12 @@ class Client(Participant):
         tuple
             train_loss, train_acc
         '''
-
+        self.model.to(self.device)
         self.model.train()
         for local_epoch in range(self.local_epochs):
             running_loss = 0.0
             correct = 0
-            total = 0
+            total = 0 
             for (data, target) in self.trainloader:
                 data, target = data.to(self.device), target.to(self.device)
                 self.optimizer.zero_grad()
@@ -200,13 +219,15 @@ class Client(Participant):
                 total += target.size(0)
                 correct += predicted.eq(torch.argmax(target,
                                         dim=1)).sum().item()
+                del data, target, predicted, loss
+                torch.cuda.empty_cache()
 
         train_loss = running_loss / len(self.trainloader)
         train_acc = 100 * correct / len(self.trainloader.dataset.data)
 
         self.list_train_loss.append(train_loss)
         self.list_train_acc.append(train_acc)
-
+        self.model.to('cpu')
         return train_loss, train_acc
 
 
@@ -278,11 +299,9 @@ class Server(Participant):
         Takes a test sample and records the output of the last hidden layer before the output layer.
         Saves it in the latent_space attribute.
         '''
-
         # Take a test sample
         data, targets = next(iter(self.testloader))
         test_img = data[0][None].to(self.device)
-
         my_output = None
 
         # Create a hook to capture the output
@@ -290,8 +309,12 @@ class Server(Participant):
             nonlocal my_output
             my_output = output_.detach()
 
+        i=0
         # For each of the clients run the test sample through the model and store the output
         for client in self.clients:
+            gc.collect()
+            torch.cuda.empty_cache()
+            client.model.to(client.device)
             client.model.eval()
             if type(client.model) == ResNet:
                 hook = client.model.layer4.register_forward_hook(my_hook)
@@ -303,3 +326,4 @@ class Server(Participant):
             # The flattened output is the latent space representation
             client.latent_space.append(torch.flatten(my_output))
             hook.remove()
+            client.model.to('cpu')

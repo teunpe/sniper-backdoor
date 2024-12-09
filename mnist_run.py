@@ -72,11 +72,11 @@ class global_args():
                 self.n_epochs = 200
                 self.n_local_epochs = 1
                 self.iid = iid
-            if dataname=='cifar':
+            if dataname=='cifar100':
                  self.n_clients = 10
                  self.lr = 0.001
                  self.momentum = 0.9
-                 self.dataname = 'cifar'
+                 self.dataname = 'cifar100'
                  self.n_epochs = 23
                  self.n_local_epochs = 1
                  self.iid = iid
@@ -97,7 +97,7 @@ def main():
 
         for iid in tqdm([True, False],file=tqdm_file, desc='iid',leave=False):
             args.set_args(dataname, iid)
-            args.n_epochs = 5
+            args.n_epochs = 23
             if args.train:
                     print(f'[!] Training network on {args.dataname} with iid {args.iid}')
                     train_network.main(args)

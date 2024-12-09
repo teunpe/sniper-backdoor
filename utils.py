@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import pylab
 from tqdm.auto import tqdm
 import seaborn as sns
+import gc
+import psutil
 
 
 torch.manual_seed(42)
@@ -529,7 +531,7 @@ def get_non_iid_data(n_clients, trainset, transform, batch, n_classes):
     return list_train
 
 
-def trainer(clients, server, epochs, test_freq=999):
+def trainer(clients, server, epochs, test_freq=999, results_dir='results'):
     """Run the training loop over the clients and server for the given number of epochs.
 
     Parameters
@@ -542,10 +544,10 @@ def trainer(clients, server, epochs, test_freq=999):
         number of training rounds 
     """    
     print(f'\n[!] Training the model for {epochs} epochs')
-
     # train the model for the number of epochs
     for epoch in tqdm(range(epochs)):
         print(f'\n[!] Epoch {epoch + 1} / {epochs}')
+        torch.cuda.empty_cache() 
 
         for i, client in enumerate(clients):
             print(f'[!] Training client {i + 1} / {len(clients)}')
@@ -558,23 +560,21 @@ def trainer(clients, server, epochs, test_freq=999):
             if (epoch+1) % test_freq == 0:
                 test_loss, test_acc = client.evaluate()
                 print(f'[!] Testing accuracy: {test_acc:.4f}')
-
             # Save the model state dict
-            client.record_model()
-
+            client.record_model(i, epoch, results_dir)
+            del train_loss
+            del train_acc
+            gc.collect()
+            torch.cuda.empty_cache()
             if client.scheduler is not None:
                 client.scheduler.step()
 
         # Extract and save the latent space
+        print('extracting latent space')
         server.extract_latent_space()
 
         # Perform fedavg
         print(f'[!] Averaging')
-        t = torch.cuda.get_device_properties(0).total_memory
-        r = torch.cuda.memory_reserved(0)
-        a = torch.cuda.memory_allocated(0)
-        f = r-a  # free inside reserved
-        print(f'before average - total: {t:3f}, reserved: {r:3f}, allocated: {a:3f}, free: {f:3f}')
         server.fedavg()
 
         # Save the test loss and accuracy every other epoch

@@ -68,7 +68,7 @@ def main(args):
                 client.optimizer, step_size=max((client.local_epochs*args.n_epochs) // 3,1), gamma=0.1)
 
         # Train the clients for the specified number of epochs
-        server_model = trainer(clients, server, args.n_epochs, args.test_freq)
+        server_model = trainer(clients, server, args.n_epochs, args.test_freq, results_dir)
 
         # Save the server accuracy over time
         test_server.append(server.list_test_acc)
