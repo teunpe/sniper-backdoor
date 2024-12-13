@@ -33,8 +33,8 @@ if __name__ == '__main__':
                         download=True)
     env = trojanvision.environ.create(**kwargs)
     dataset = trojanvision.datasets.create(**kwargs)
-    # model = trojanvision.models.create(**kwargs)
-    model = build_model(100, 'VGG')
+    model = trojanvision.models.create(model_name='vgg11_bn', model='vgg11_bn', dataset_name='cifar100', dataset=dataset)
+    # model = build_model(100, 'cifar100')
     server_model = torch.load(os.path.join(args.dir, 'cifar100_iid_True_server_results.pt'))['model']
     model.load_state_dict(server_model)
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
