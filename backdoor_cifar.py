@@ -16,19 +16,23 @@ from models import build_model
 
 from trojanvision.attacks import BackdoorAttack
 import trojanvision.configs
+import trojanzoo
+
+import trojanvision.data
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', type=str, default='./results', help='directory')
     trojanvision.environ.add_argument(parser)
     trojanvision.datasets.add_argument(parser)
+    trojanzoo.datasets.add_argument(parser)
     trojanvision.models.add_argument(parser)
     trojanvision.trainer.add_argument(parser)
     trojanvision.marks.add_argument(parser)
     trojanvision.attacks.add_argument(parser)
     kwargs = vars(parser.parse_args())
     args = parser.parse_args()
-    
+
     dataset = CIFAR100(root='//vol/csedu-nobackup/project/tpeeters/data', train=True,
                         download=True)
     env = trojanvision.environ.create(**kwargs)
