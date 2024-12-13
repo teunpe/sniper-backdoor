@@ -5,7 +5,7 @@ CUDA_VISIBLE_DEVICES=0 python ./examples/backdoor_attack.py --color --verbose 1 
 """  # noqa: E501
 
 '''
-python backdoor_cifar.py --color --verbose 1 --pretrained --validate_interval 1 --dataset cifar100 --model vgg11_bn --attack input_aware_dynamic --mark_random_init --epochs 50 --lr 0.01 --save
+python backdoor_cifar.py --color --verbose 1 --pretrained --validate_interval 1 --dataset cifar100 --model vgg11_bn --attack input_aware_dynamic --mark_random_init --epochs 50 --lr 0.01 --save --dir //vol/csedu-nobackup/project/tpeeters/results/cifar --folder_path //vol/csedu-nobackup/project/tpeeters/data/cifar-100-python
 '''
 import trojanvision
 import argparse
