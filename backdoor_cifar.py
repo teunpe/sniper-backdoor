@@ -5,7 +5,7 @@ CUDA_VISIBLE_DEVICES=0 python ./examples/backdoor_attack.py --color --verbose 1 
 """  # noqa: E501
 
 '''
-python backdoor_cifar.py --color --verbose 1 --pretrained --validate_interval 1 --dataset cifar100 --model vgg11_bn --attack input_aware_dynamic --mark_random_init --epochs 50 --lr 0.01 --save --dir //vol/csedu-nobackup/project/tpeeters/results/cifar --folder_path //vol/csedu-nobackup/project/tpeeters/data/cifar-100-python
+python backdoor_cifar.py --color --tqdm --verbose 1 --pretrained --validate_interval 1 --dataset cifar100 --model vgg11_bn --attack input_aware_dynamic --mark_random_init --epochs 50 --lr 0.01 --save --dir //vol/csedu-nobackup/project/tpeeters/results/cifar --data_dir //vol/csedu-nobackup/project/tpeeters/data/cifar-100-python --download
 '''
 import trojanvision
 import argparse
@@ -18,6 +18,28 @@ from trojanvision.attacks import BackdoorAttack
 import trojanvision.configs
 
 import trojanvision.data
+from tqdm import tqdm
+
+def run_attack(epsilon, args, kwargs):
+    print(f'Starting attack with epsilon {epsilon}...', flush=True)
+    kwargs['poison_percent'] = epsilon
+    print(kwargs.keys())
+    env = trojanvision.environ.create(**kwargs)
+    dataset = trojanvision.datasets.create(**kwargs)
+    model = trojanvision.models.create(model_name='vgg11_bn', model='vgg11_bn', dataset_name='cifar100', dataset=dataset)
+    # model = build_model(100, 'cifar100')
+    server_model = torch.load(os.path.join(args.dir, 'cifar100_iid_True_server_results.pt'))['model']
+    model.load_state_dict(server_model)
+    trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
+    mark = trojanvision.marks.create(dataset=dataset, **kwargs)
+    attack: BackdoorAttack = trojanvision.attacks.create(dataset=dataset, model=model, mark=mark, **kwargs)
+    print(f'Environment set up...', flush=True)
+    if env['verbose']:
+        trojanvision.summary(env=env, dataset=dataset, model=model, mark=mark, trainer=trainer, attack=attack)
+    attack.attack(**trainer)
+    asr, clean_acc = attack.validate_fn()
+    print(f'Attack completed with asr {asr}, clean acc {clean_acc}', flush=True)
+    return asr, clean_acc
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -30,17 +52,9 @@ if __name__ == '__main__':
     trojanvision.attacks.add_argument(parser)
     kwargs = vars(parser.parse_args())
     args = parser.parse_args()
-
-    env = trojanvision.environ.create(**kwargs)
-    dataset = trojanvision.datasets.create(download=True, **kwargs)
-    model = trojanvision.models.create(model_name='vgg11_bn', model='vgg11_bn', dataset_name='cifar100', dataset=dataset)
-    # model = build_model(100, 'cifar100')
-    server_model = torch.load(os.path.join(args.dir, 'cifar100_iid_True_server_results.pt'))['model']
-    model.load_state_dict(server_model)
-    trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
-    mark = trojanvision.marks.create(dataset=dataset, **kwargs)
-    attack: BackdoorAttack = trojanvision.attacks.create(dataset=dataset, model=model, mark=mark, **kwargs)
-
-    if env['verbose']:
-        trojanvision.summary(env=env, dataset=dataset, model=model, mark=mark, trainer=trainer, attack=attack)
-    attack.attack(**trainer)
+    results = []
+    epsilons = [0.001, 0.005, 0.010, 0.015, 0.020]
+    for eps in tqdm(epsilons):
+        print(eps, flush=True)
+        curr_asr, curr_clean_acc = run_attack(eps, args, kwargs)
+        results.append({'eps': eps, 'asr': curr_asr, 'clean_acc': curr_clean_acc})
