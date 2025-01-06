@@ -68,7 +68,7 @@ def main(args):
                 client.optimizer, step_size=max((client.local_epochs*args.n_epochs) // 3,1), gamma=0.1)
 
         # Train the clients for the specified number of epochs
-        server_model = trainer(clients, server, args.n_epochs, args.test_freq, results_dir)
+        server_model, best_epoch = trainer(clients, server, args.n_epochs, args.test_freq, args.early_stop, results_dir)
 
         # Save the server accuracy over time
         test_server.append(server.list_test_acc)
@@ -80,11 +80,13 @@ def main(args):
         # Save the server results
         torch.save({'model': server_model.state_dict(),
                     'loss': server.list_test_loss,
-                    'acc': server.list_test_acc},
+                    'acc': server.list_test_acc,
+                    'best_epoch': best_epoch},
                    os.path.join(results_dir, f'{args.dataname}_iid_{args.iid}_server_results.pt'))
 
         torch.save({'acc_clients': test_clients,
-                    'acc_server': test_server}, os.path.join(results_dir, f'{args.dataname}_iid_{args.iid}_average_results.pt'))
+                    'acc_server': test_server,
+                    'best_epoch': best_epoch}, os.path.join(results_dir, f'{args.dataname}_iid_{args.iid}_average_results.pt'))
 
 
 if __name__ == '__main__':

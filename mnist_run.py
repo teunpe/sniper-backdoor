@@ -22,9 +22,9 @@ class global_args():
         trainset_size = 1000
         dir = './'
         run_name = ''
-        test_freq = 999
+        test_freq = 1
         warm = False
-        train = False
+        train = True
         # train args
         n_clients = 5
         lr = 0.1
@@ -33,6 +33,7 @@ class global_args():
         n_epochs = 50
         n_local_epochs = 2
         iid = True
+        early_stop = True
         # backdoor args
         epsilon = 0
         client_id = 0
@@ -72,6 +73,7 @@ class global_args():
                 self.n_epochs = 200
                 self.n_local_epochs = 1
                 self.iid = iid
+
             if dataname=='cifar100':
                  self.n_clients = 10
                  self.lr = 0.001
@@ -84,7 +86,7 @@ class global_args():
 def main():
     datanames = ['cifar100']    
     args = global_args()
-    args.run_name = 'cifar' 
+    args.run_name = datanames[0]
     args.dir = '//vol/csedu-nobackup/project/tpeeters'
     args.train = True
     tqdm_file = open(f'{args.run_name}_progress.txt','w')

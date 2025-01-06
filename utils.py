@@ -12,6 +12,7 @@ import pylab
 from tqdm.auto import tqdm
 import seaborn as sns
 import gc
+import copy
 import psutil
 
 
@@ -531,7 +532,7 @@ def get_non_iid_data(n_clients, trainset, transform, batch, n_classes):
     return list_train
 
 
-def trainer(clients, server, epochs, test_freq=999, results_dir='results'):
+def trainer(clients, server, epochs, test_freq=999, early_stop=False, results_dir='results'):
     """Run the training loop over the clients and server for the given number of epochs.
 
     Parameters
@@ -543,6 +544,15 @@ def trainer(clients, server, epochs, test_freq=999, results_dir='results'):
     epochs : int
         number of training rounds 
     """    
+    if early_stop:
+        if test_freq == 999:
+            raise RuntimeError("Early stopping set to True, but test frequency not set.")
+        else:
+            best_loss = 999
+            best_epoch = 0
+            best_model_weights = None
+            patience = 10
+    
     print(f'\n[!] Training the model for {epochs} epochs')
     # train the model for the number of epochs
     for epoch in tqdm(range(epochs)):
@@ -582,7 +592,18 @@ def trainer(clients, server, epochs, test_freq=999, results_dir='results'):
             test_loss, test_acc = server.evaluate()
             print(f'[!] Server testing accuracy: {test_acc:.4f}')
 
-    return server.model
+            if test_loss < best_loss:
+                best_loss = test_loss
+                best_epoch = epoch
+                best_model_weights = copy.deepcopy(server.model.state_dict())
+                patience = 10
+            else:
+                patience -= 1
+                if patience == 0:
+                    server.model.load_state_dict(best_model_weights)
+                    return server.model, best_epoch
+
+    return server.model, epoch
 
 
 def weights_init(m):
