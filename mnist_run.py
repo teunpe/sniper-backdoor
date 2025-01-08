@@ -3,17 +3,18 @@ import personalize_model
 import shadow_network
 import synthetic_data
 import backdoor
+import backdoor_cifar
 import client_identification
 import numpy as np
 from tqdm.auto import tqdm
 import argparse
 
-# parser = argparse.ArgumentParser('Personalization')
+parser = argparse.ArgumentParser(description='Dataname')
 
-# parser.add_argument('--dataname', type=str, default='mnist',
-#                     help='dataname', choices=['mnist', 'emnist', 'fmnist'])
+parser.add_argument('--dataname', type=str, default='mnist',
+                    help='dataname', choices=['mnist', 'emnist', 'fmnist', 'cifar100'])
 
-# args=parser.parse_args()
+given_args = parser.parse_args()
 
 class global_args():
         # static args
@@ -84,15 +85,15 @@ class global_args():
                  self.iid = iid
 
 def main():
-    datanames = ['cifar100']    
+    datanames = [given_args.dataname]
     args = global_args()
-    args.run_name = datanames[0]
+    args.run_name = f'{datanames[0]}_early_stop'
     args.dir = '//vol/csedu-nobackup/project/tpeeters'
-    args.train = True
+    args.train = False
     tqdm_file = open(f'{args.run_name}_progress.txt','w')
 
-    sources = [0]
-    targets = [1]
+    sources = [0,1]
+    targets = [9,7]
 
     for dataname in tqdm(datanames,file=tqdm_file, desc='data',leave=False):
         args.dataname = dataname
@@ -104,24 +105,25 @@ def main():
                     print(f'[!] Training network on {args.dataname} with iid {args.iid}')
                     train_network.main(args)
 
-            for source in tqdm(sources,file=tqdm_file, desc='source',leave=False):
-                 
-                 for target in tqdm(targets,file=tqdm_file, desc='target',leave=False):
+            for source, target in tqdm(zip(sources,targets),file=tqdm_file, desc='source',leave=False):
+                args.target_label = target
+                args.source_label = source
 
-                    if source==target:
-                        continue
-                    args.target_label = target
-                    args.source_label = source
+                for epsilon in tqdm([0.001, 0.005, 0.010, 0.015, 0.020],file=tqdm_file, desc='eps',leave=False):
+                    args.epsilon = epsilon
+                    
+                    print(f'[!] Training backdoored model on {args.dataname} with iid {args.iid},'
+                        f'epsilon {args.epsilon}, source {source} and target {target}.')
+                    if dataname == 'cifar100':
+                         backdoor_cifar.main(epsilon, False, args)
+                    else: 
+                         backdoor.main(args)
 
-                    for epsilon in tqdm([0.050, 0.100, 0.200, 0.400, 0.800],file=tqdm_file, desc='eps',leave=False):
-                        args.epsilon = epsilon
-                        
-                        print(f'[!] Training backdoored model on {args.dataname} with iid {args.iid},'
-                            f'epsilon {args.epsilon}, source {source} and target {target}.')
-                        backdoor.main(args)
-
-                        print(f'[!] Training backdoored model on {args.dataname} with iid {args.iid},'
-                            f'epsilon {args.epsilon}, source {source} and target {target}.')
+                    print(f'[!] Training backdoored model on {args.dataname} with iid {args.iid},'
+                        f'epsilon {args.epsilon}, source {source} and target {target}.')
+                    if dataname == 'cifar100':
+                         backdoor_cifar.main(epsilon, True, args)
+                    else:
                         personalize_model.main(args)
 
 if __name__ == '__main__':

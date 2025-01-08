@@ -9,7 +9,7 @@ from poisoned_dataset import create_backdoor_data_loader
 parser = argparse.ArgumentParser('Personalization')
 
 parser.add_argument('--dataname', type=str, default='mnist',
-                    help='dataname', choices=['mnist', 'emnist', 'fmnist'])
+                    help='dataname', choices=['mnist', 'emnist', 'fmnist', 'cifar100'])
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
 parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
 parser.add_argument('--epsilon', type=float, default=0.1, help='epsilon')
