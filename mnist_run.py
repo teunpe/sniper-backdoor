@@ -1,10 +1,7 @@
 import train_network
 import personalize_model
-import shadow_network
-import synthetic_data
 import backdoor
 import backdoor_cifar
-import client_identification
 import numpy as np
 from tqdm.auto import tqdm
 import argparse
@@ -15,6 +12,7 @@ parser.add_argument('--dataname', type=str, default='mnist',
                     help='dataname', choices=['mnist', 'emnist', 'fmnist', 'cifar100'])
 
 given_args = parser.parse_args()
+given_kwargs = vars(parser.parse_args)
 
 class global_args():
         # static args
@@ -23,10 +21,12 @@ class global_args():
         trainset_size = 1000
         dir = './'
         run_name = ''
-        test_freq = 1
+        test_freq = 999
         warm = False
         train = True
         # train args
+        valsplit = 0.05
+        holdoutsplit = 0.05
         n_clients = 5
         lr = 0.1
         momentum = 0.9
@@ -42,7 +42,8 @@ class global_args():
         target_label = 1
         pretrained = False
         fake_dir = ''
-        epochs = 10
+        backdoor_epochs = 10
+        backdoor_lr = 0.0001
         # personalization args
         finetuning_epochs = 1
 
@@ -74,13 +75,15 @@ class global_args():
                 self.n_epochs = 200
                 self.n_local_epochs = 1
                 self.iid = iid
+                self.backdoor_epochs = 20
+                self.backdoor_lr = 0.01
 
             if dataname=='cifar100':
                  self.n_clients = 10
                  self.lr = 0.001
                  self.momentum = 0.9
                  self.dataname = 'cifar100'
-                 self.n_epochs = 23
+                 self.n_epochs = 100
                  self.n_local_epochs = 1
                  self.iid = iid
 
@@ -100,7 +103,6 @@ def main():
 
         for iid in tqdm([True, False],file=tqdm_file, desc='iid',leave=False):
             args.set_args(dataname, iid)
-            args.n_epochs = 23
             if args.train:
                     print(f'[!] Training network on {args.dataname} with iid {args.iid}')
                     train_network.main(args)

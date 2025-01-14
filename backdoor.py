@@ -8,6 +8,8 @@ from models import build_model
 from utils import backdoor_model_trainer
 import numpy as np
 import utils
+import copy
+import pickle
 
 parser = argparse.ArgumentParser('Backdoor attack')
 
@@ -102,7 +104,12 @@ def main(args):
 
     torch.save({'train_loss': list_train_loss, 'train_acc': list_train_acc, 'test_loss': list_test_loss, 'test_acc': list_test_acc,
                'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,
-                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': poisoned_model.state_dict(), 'args': args}, path)
-    print(path)
+                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': copy.deepcopy(poisoned_model.state_dict()), 'args': args}, path)
+    
+    with open(f'{path}.pickle', 'wb') as p:
+        pickle.dump({'train_loss': list_train_loss, 'train_acc': list_train_acc, 'test_loss': list_test_loss, 'test_acc': list_test_acc,
+               'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,
+                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': copy.deepcopy(poisoned_model.state_dict()), 'args': args},
+                p, pickle.HIGHEST_PROTOCOL)
 if __name__ == '__main__':
     main()

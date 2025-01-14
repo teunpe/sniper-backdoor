@@ -7,7 +7,7 @@ import os
 import numpy as np
 from models import build_model
 from torch import optim, nn
-
+import pickle
 
 def main(args):
     data_dir = os.path.join(args.dir, 'data')
@@ -23,9 +23,9 @@ def main(args):
         # Initialize clients and server
         torch.manual_seed(_)
         np.random.seed(_)
-
-        list_trainloader, list_testloader, n_classes, holdoutloader = get_dataset(
-            args.n_clients, args.dataname, args.iid, args.batch_size, args.trainset_size, data_dir)
+        list_trainloader, list_testloader, n_classes, holdoutloader, validationloader = get_dataset(
+            args.n_clients, args.dataname, args.iid, args.batch_size, args.valsplit, 
+            args.holdoutsplit, data_dir)
 
         clients = []
         for train, test in zip(list_trainloader, list_testloader):
@@ -36,7 +36,7 @@ def main(args):
 
         server = Server(
             clients=clients, dataname=args.dataname, n_classes=n_classes,
-            testloader=copy.deepcopy(list_testloader[0]))
+            testloader=copy.deepcopy(list_testloader[0]), valloader=validationloader)
 
         if args.warm:
             # If we are in the warm up model we train the model for few epochs in the 5% of the dataset
@@ -68,26 +68,33 @@ def main(args):
                 client.optimizer, step_size=max((client.local_epochs*args.n_epochs) // 3,1), gamma=0.1)
 
         # Train the clients for the specified number of epochs
-        server_model, best_epoch = trainer(clients, server, args.n_epochs, args.test_freq, args.early_stop, results_dir)
+        server_model, best_epoch = trainer(clients, server, validationloader, args.n_epochs, args.test_freq, args.early_stop, results_dir)
 
         # Save the server accuracy over time
         test_server.append(server.list_test_acc)
-
+        print('here')
         # Save the state dicts and performance of each client in each epoch
         for idx, client in enumerate(clients):
             client.save_model(idx, args.dataname, args.iid, results_dir)
-
+        print('here')
         # Save the server results
         torch.save({'model': server_model.state_dict(),
                     'loss': server.list_test_loss,
                     'acc': server.list_test_acc,
-                    'best_epoch': best_epoch},
+                    'best_epoch': best_epoch,
+                    'holdoutloader': holdoutloader},
                    os.path.join(results_dir, f'{args.dataname}_iid_{args.iid}_server_results.pt'))
+        
+        path = os.path.join(results_dir, f'{args.dataname}_iid_{args.iid}_server_results.pt')
+        with open(f'{path}.pickle', 'wb') as f:
+            pickle.dump({'model': server_model.state_dict(),
+                    'loss': server.list_test_loss,
+                    'acc': server.list_test_acc,
+                    'best_epoch': best_epoch}, f)
 
         torch.save({'acc_clients': test_clients,
                     'acc_server': test_server,
                     'best_epoch': best_epoch}, os.path.join(results_dir, f'{args.dataname}_iid_{args.iid}_average_results.pt'))
-
 
 if __name__ == '__main__':
     main()
