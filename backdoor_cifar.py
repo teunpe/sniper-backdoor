@@ -45,7 +45,8 @@ def personalize_model(results_dir, args):
     model.to(device)
 
     # load the dataset
-    datasets = get_dataset(args.n_clients, args.dataname, args.iid, args.batch_size, size=1000, datadir=data_dir)
+    datadir = os.path.join(args.dir, 'data')
+    datasets = get_dataset(args.n_clients, args.dataname, args.iid, args.batch_size, size=1000, datadir=datadir)
     _, list_test, n_classes, train_loader = datasets
     test_loader = list_test[0]
 

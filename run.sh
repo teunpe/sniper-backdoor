@@ -14,4 +14,4 @@
 source //vol/csedu-nobackup/project/tpeeters/venv/bin/activate
 export TORCH_HOME=//vol/csedu-nobackup/project/tpeeters/torch
 
-python mnist_run.py --dataname fmnist
+python mnist_run.py --dataname cifar100
