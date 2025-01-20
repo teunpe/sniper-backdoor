@@ -45,7 +45,7 @@ class global_args():
         backdoor_epochs = 10
         backdoor_lr = 0.0001
         # personalization args
-        finetuning_epochs = 1
+        finetuning_epochs = 10
 
         def set_args(self, dataname, iid):
             if dataname=='mnist':
@@ -90,9 +90,9 @@ class global_args():
 def main():
     datanames = [given_args.dataname]
     args = global_args()
-    args.run_name = f'{datanames[0]}_early_stop'
+    args.run_name = f'{datanames[0]}_training'
     args.dir = '//vol/csedu-nobackup/project/tpeeters'
-    args.train = False
+    args.train = True
     tqdm_file = open(f'{args.run_name}_progress.txt','w')
 
     sources = [0,1]
@@ -106,6 +106,7 @@ def main():
             if args.train:
                     print(f'[!] Training network on {args.dataname} with iid {args.iid}')
                     train_network.main(args)
+                    # continue
 
             for source, target in tqdm(zip(sources,targets),file=tqdm_file, desc='source',leave=False):
                 args.target_label = target

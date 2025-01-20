@@ -10,6 +10,7 @@ from torchvision.models.vgg import VGG
 import gc
 from copy import deepcopy
 import psutil
+import pickle
 
 
 class Participant:
@@ -36,13 +37,14 @@ class Participant:
         evaluate the model on the test set
     '''
 
-    def __init__(self, testloader, dataname='mnist', n_classes=10):
+    def __init__(self, testloader, valloader=None, dataname='mnist', n_classes=10):
         self.device = torch.device(
             'cuda:0' if torch.cuda.is_available() else 'cpu')
         # self.cpu = torch.device('cpu')
         self.model = build_model(
             n_classes=n_classes, dataname=dataname).to('cpu')
         self.testloader = testloader
+        self.valloader = valloader
         self.criterion = nn.CrossEntropyLoss()
         self.data = dataname
 
@@ -65,7 +67,7 @@ class Participant:
         test_loss = 0
         correct = 0
         with torch.no_grad():
-            for (data, target) in self.testloader:
+            for (data, target) in self.valloader:
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.model(data)
                 test_loss += self.criterion(output,
@@ -74,8 +76,8 @@ class Participant:
                 correct += pred.eq(torch.argmax(target,
                                                 dim=1)).sum().item()
 
-        test_loss /= len(self.testloader)
-        test_acc = 100 * correct / len(self.testloader.dataset.data)
+        test_loss /= len(self.valloader)
+        test_acc = 100 * correct / len(self.valloader.dataset.data)
 
         self.list_test_loss.append(test_loss)
         self.list_test_acc.append(test_acc)
@@ -177,14 +179,21 @@ class Client(Participant):
             state_dict = torch.load(current_path)['model_record']
             model_records.append(state_dict)
 
-        path = os.path.join(path, f'{dataname}_iid_{iid}_client_{idx}_results.pt')
+        path_save = os.path.join(path, f'{dataname}_iid_{iid}_client_{idx}_results.pt')
+        torch.save({'train_loss': self.list_train_loss,
+                    'train_acc': self.list_train_acc,
+                    'test_loss': self.list_test_loss,
+                    'test_acc': self.list_test_acc,
+                    'latent_space': self.latent_space},
+                   path_save)
+        path_save = os.path.join(path, f'{dataname}_iid_{iid}_client_{idx}_records.pt')
         torch.save({'train_loss': self.list_train_loss,
                     'train_acc': self.list_train_acc,
                     'test_loss': self.list_test_loss,
                     'test_acc': self.list_test_acc,
                     'model_records': model_records,
                     'latent_space': self.latent_space},
-                   path)
+                   path_save)
 
     def train(self):
         '''
@@ -253,8 +262,8 @@ class Server(Participant):
     extract_latent_space()
         Extracts the latent space of the server model by running a test sample through the model hidden layers 
     '''
-    def __init__(self, clients, dataname='mnist', n_classes=10, testloader=None):
-        super().__init__(testloader, dataname=dataname, n_classes=n_classes)
+    def __init__(self, clients, dataname='mnist', n_classes=10, testloader=None, valloader=None):
+        super().__init__(testloader, valloader, dataname=dataname, n_classes=n_classes)
         self.clients = clients
 
     def fedavg(self):

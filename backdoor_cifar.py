@@ -21,22 +21,40 @@ import trojanvision.configs
 import trojanvision.data
 from tqdm import tqdm
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dir', type=str, default='./results', help='directory')
-trojanvision.environ.add_argument(parser)
-trojanvision.datasets.add_argument(parser)
-trojanvision.models.add_argument(parser)
-trojanvision.trainer.add_argument(parser)
-trojanvision.marks.add_argument(parser)
-trojanvision.attacks.add_argument(parser)
-kwargs = vars(parser.parse_args())
-args = parser.parse_args()
+from copy import deepcopy
 
-def personalize_model(results_dir, args):
+import pickle
+
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--dir', type=str, default='./results', help='directory')
+# trojanvision.environ.add_argument(parser)
+# trojanvision.datasets.add_argument(parser)
+# trojanvision.models.add_argument(parser)
+# trojanvision.trainer.add_argument(parser)
+# trojanvision.marks.add_argument(parser)
+# trojanvision.attacks.add_argument(parser)
+# kwargs = vars(parser.parse_args())
+# args = parser.parse_args()
+
+def personalize_model(results_dir: str, args):
+    """Personalize the backdoored CIFAR100 model. 
+
+    Parameters
+    ----------
+    results_dir : str
+        Directory where results are stored
+    args
+
+    Returns
+    -------
+    model
+    """    
     # load the backdoored model
     path = os.path.join(
         results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_backdoor_results.pt')
-    backdoored_model = torch.load(path)['model']
+    results = torch.load(path)
+    holdoutloader = results['holdoutloader'] # training data not used in training
+    backdoored_model = results['model']
     model = build_model(n_classes, args.pretrained)
     model.load_state_dict(backdoored_model)
 
@@ -63,7 +81,7 @@ def personalize_model(results_dir, args):
     # fine tune the model
     for epoch in range(args.finetuning_epochs):
         print(f'\n[!] Epoch {epoch + 1} / {args.finetuning_epochs}')
-        train_loss, train_acc = backdoor_train(model, train_loader,
+        train_loss, train_acc = backdoor_train(model, holdoutloader,
                                 optimizer, criterion, device)
         test_loss, test_acc = backdoor_evaluate(
                         model, test_loader, criterion, device)
@@ -71,47 +89,91 @@ def personalize_model(results_dir, args):
         print(f'[!] Testing accuracy: {test_acc:.4f}')
     return model
 
-def run_attack(epsilon, personalized, model, args, kwargs):
+
+def run_attack(epsilon: float, personalized: bool, model, results_dir: str, args, kwargs):
+    """_summary_
+
+    Parameters
+    ----------
+    epsilon : float
+        
+    personalized : bool
+        Indicates whether model is already personalized or not.
+    model 
+
+    results_dir : str
+
+    args : 
+
+    kwargs : 
+
+    Returns
+    -------
+    tuple
+        asr, clean_acc, model state dict, holdoutloader
+    """    
     print(f'Starting attack with epsilon {epsilon}...', flush=True)
     kwargs['poison_percent'] = epsilon
-    print(kwargs.keys())
+
+    # set up trojanvision
     env = trojanvision.environ.create(**kwargs)
-    dataset = trojanvision.datasets.create(**kwargs)
+    dataset = trojanvision.datasets.create(dataset='cifar100', **kwargs)
     model = trojanvision.models.create(model_name='vgg11_bn', model='vgg11_bn', dataset_name='cifar100', dataset=dataset)
-    # model = build_model(100, 'cifar100')
+    
+    # load the model
+    server_results = torch.load(os.path.join(results_dir, 'cifar100_iid_True_server_results.pt'))
+    holdout = server_results['holdoutloader'] # save holdout loader for use during personalization
     if personalized:
         server_model = model.load_state_dict()
     else:
-        server_model = torch.load(os.path.join(args.dir, 'cifar100_iid_True_server_results.pt'))['model']
+        server_model = server_results['model']
     model.load_state_dict(server_model)
+
+    # set up the attack
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
     mark = trojanvision.marks.create(dataset=dataset, **kwargs)
     attack: BackdoorAttack = trojanvision.attacks.create(dataset=dataset, model=model, mark=mark, **kwargs)
     print(f'Environment set up...', flush=True)
     if env['verbose']:
         trojanvision.summary(env=env, dataset=dataset, model=model, mark=mark, trainer=trainer, attack=attack)
-    if not personalized:
+
+    if personalized == False:
         attack.attack(**trainer)
     asr, clean_acc = attack.validate_fn()
     print(f'Attack completed with asr {asr}, clean acc {clean_acc}', flush=True)
-    return asr, clean_acc, model.state_dict()
+    return asr, clean_acc, deepcopy(model.state_dict()), holdout
+
 
 def main(epsilon, personalized, args):
+    # prepare kwargs for setting the attack conditions
+    kwargs = {}
+    kwargs['attack_name'] = 'input_aware_dynamic'
+    kwargs['data_dir'] = os.path.join(args.dir, 'data/cifar-100-python')
+    kwargs['epochs'] = 100
+    kwargs['lr'] = 0.001
+
     results_dir = os.path.join(args.dir, 'results', args.run_name)
+    
     results = []
     model = None
     if personalized:
         model = personalize_model(results_dir, args)
-    curr_asr, curr_clean_acc, state_dict = run_attack(epsilon, personalized, model, args, kwargs)
-    results.append({'eps': epsilon, 'asr': curr_asr, 'clean_acc': curr_clean_acc, 'model': state_dict})
+    curr_asr, curr_clean_acc, state_dict, holdout = run_attack(epsilon, personalized, model, results_dir, args, kwargs)
+    results.append({'eps': epsilon, 'asr': curr_asr, 'clean_acc': curr_clean_acc, 'holdoutloader': holdout})
     
-    if args.personalized: pers = 'personalized_'
-    else: pers = ''
-    path = os.path.join(
-        results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_{args.personalized}backdoor_results.pt')
+    if personalized: 
+        path = os.path.join(
+            results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_finetuned_results.pt')
+    else:
+        path = os.path.join(
+            results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_backdoor_results.pt')
 
     torch.save({'results': results}, path)
     print(path)
+
+    with open(f'{path}.pickle', 'wb') as p:
+        pickle.dump({'results': results},
+                p, pickle.HIGHEST_PROTOCOL)
 
 if __name__ == '__main__':
     main()

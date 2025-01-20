@@ -5,6 +5,7 @@ import numpy as np
 from models import build_model
 from utils import get_dataset, backdoor_train, backdoor_evaluate, validation_per_class
 from poisoned_dataset import create_backdoor_data_loader
+import pickle
 
 parser = argparse.ArgumentParser('Personalization')
 
@@ -48,6 +49,8 @@ def main(args):
         results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_backdoor_results.pt')
     results = torch.load(path)
 
+    holdoutloader = results['holdoutloader']
+
     weights_model = results['model']
     model = build_model(n_classes, args.pretrained)
     model.load_state_dict(weights_model)
@@ -60,8 +63,8 @@ def main(args):
     model.to(device)
 
     # load the dataset
-    datasets = get_dataset(args.n_clients, args.dataname, args.iid, args.batch_size, size=1000, datadir=data_dir)
-    _, list_test, n_classes, train_loader = datasets
+    datasets = get_dataset(args.n_clients, args.dataname, args.iid, args.batch_size, datadir=data_dir)
+    _, list_test, n_classes, _, _ = datasets
     test_loader = list_test[0]
 
     # set up loss and optimizer
@@ -77,7 +80,7 @@ def main(args):
     # fine tune the model
     for epoch in range(args.finetuning_epochs):
         print(f'\n[!] Epoch {epoch + 1} / {args.finetuning_epochs}')
-        train_loss, train_acc = backdoor_train(model, train_loader,
+        train_loss, train_acc = backdoor_train(model, holdoutloader,
                                 optimizer, criterion, device)
         test_loss, test_acc = backdoor_evaluate(
                         model, test_loader, criterion, device)
@@ -122,12 +125,12 @@ def main(args):
 
     torch.save({'train_loss': train_loss, 'train_acc': train_acc, 'test_loss': test_loss, 'test_acc': test_acc,
                'test_loss_backdoor': poison_loss, 'test_acc_backdoor': poison_acc, 'clean_per_class': clean_per_class,
-                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': model.state_dict(), 'args': args}, path)
+                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'args': args}, path)
     
     path = os.path.join(
         results_dir, f'clean_{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_finetuned_results.pt')
 
-    torch.save({'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': model.state_dict(), 'args': args}, path)
+    torch.save({'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'args': args}, path)
     
 
 if __name__ == '__main__':

@@ -8,13 +8,13 @@ from models import build_model
 from utils import backdoor_model_trainer
 import numpy as np
 import utils
-import copy
+from copy import deepcopy
 import pickle
 
 parser = argparse.ArgumentParser('Backdoor attack')
 
 parser.add_argument('--dataname', type=str, default='mnist',
-                    help='dataname', choices=['mnist', 'emnist', 'fmnist'])
+                    help='dataname', choices=['mnist', 'emnist', 'fmnist', 'cifar100'])
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
 parser.add_argument('--epsilon', type=float, default=0.1, help='epsilon')
@@ -48,17 +48,18 @@ def main(args):
     elif args.dataname == 'fmnist':
         n_classes = 10
 
+    # prepare the models
     path = os.path.join(
         results_dir, f'{args.dataname}_iid_{args.iid}_server_results.pt')
     model = torch.load(path)['model']
+    holdoutloader = torch.load(path)['holdoutloader'] # prepared for later use in personalization
 
     poisoned_model = build_model(n_classes, args.pretrained)
-    poisoned_model.load_state_dict(model)
+    poisoned_model.load_state_dict(deepcopy(model))
 
     clean_model = build_model(n_classes, args.pretrained)
-    clean_model.load_state_dict(model)
+    clean_model.load_state_dict(deepcopy(model))
 
-    # Load the dataset
     device = torch.device(
         'cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -69,11 +70,11 @@ def main(args):
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(
-        poisoned_model.parameters(), lr=args.lr, momentum=args.momentum)
+        poisoned_model.parameters(), lr=args.backdoor_lr, momentum=args.momentum)
     print(f'[!] Implementing backdoor with epsilon {args.epsilon}...')
-    list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor = backdoor_model_trainer(poisoned_model, criterion, optimizer, args.epochs,
+    list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor = backdoor_model_trainer(poisoned_model, criterion, optimizer, args.backdoor_epochs,
                                                                                                                                              train_data_loader, test_data_ori_loader, test_data_tri_loader, device)
-
+    
     clean_model.to(device)
     clean_model_performance = utils.validation_per_class(
         clean_model, test_data_ori_loader, n_classes, device)
@@ -88,12 +89,11 @@ def main(args):
     asr = succesful_attacks/all_attacks
     print(f'ASR: {asr}')
 
-    clean_per_class = clean_per_class.diag()/clean_per_class.sum(1)
-    poisoned_per_class = poisoned_per_class.diag()/poisoned_per_class.sum(1)
+    clean_per_class_sum = clean_per_class.diag()/clean_per_class.sum(1)
+    poisoned_per_class_sum = poisoned_per_class.diag()/poisoned_per_class.sum(1)
 
     clean_model_accuracy = (clean_model_performance.diag()/clean_model_performance.sum(1)).mean()
-    poisoned_model_accuracy = clean_per_class.mean()
-    print(clean_model_accuracy, poisoned_model_accuracy)
+    poisoned_model_accuracy = clean_per_class_sum.mean()
     cad = clean_model_accuracy - poisoned_model_accuracy
     print(f'CAD: {cad}')
 
@@ -103,13 +103,8 @@ def main(args):
         results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_backdoor_results.pt')
 
     torch.save({'train_loss': list_train_loss, 'train_acc': list_train_acc, 'test_loss': list_test_loss, 'test_acc': list_test_acc,
-               'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,
-                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': copy.deepcopy(poisoned_model.state_dict()), 'args': args}, path)
+               'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class_sum,
+                'poisoned_per_class': poisoned_per_class_sum, 'clean_matrix': clean_per_class, 'poisoned_matrix': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': deepcopy(poisoned_model.state_dict()), 'args': args, 'holdoutloader': holdoutloader}, path)
     
-    with open(f'{path}.pickle', 'wb') as p:
-        pickle.dump({'train_loss': list_train_loss, 'train_acc': list_train_acc, 'test_loss': list_test_loss, 'test_acc': list_test_acc,
-               'test_loss_backdoor': list_test_loss_backdoor, 'test_acc_backdoor': list_test_acc_backdoor, 'clean_per_class': clean_per_class,
-                'poisoned_per_class': poisoned_per_class, 'asr': asr, 'cad': cad, 'model': copy.deepcopy(poisoned_model.state_dict()), 'args': args},
-                p, pickle.HIGHEST_PROTOCOL)
 if __name__ == '__main__':
     main()
