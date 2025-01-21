@@ -11,29 +11,6 @@ import utils
 from copy import deepcopy
 import pickle
 
-parser = argparse.ArgumentParser('Backdoor attack')
-
-parser.add_argument('--dataname', type=str, default='mnist',
-                    help='dataname', choices=['mnist', 'emnist', 'fmnist', 'cifar100'])
-parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
-parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
-parser.add_argument('--epsilon', type=float, default=0.1, help='epsilon')
-parser.add_argument('--client_id', type=int, default=0, help='client')
-parser.add_argument('--batch_size', type=int, default=64, help='batch size')
-parser.add_argument('--source_label', type=int, default=0, help='source label')
-parser.add_argument('--target_label', type=int, default=1, help='target label')
-parser.add_argument('--seed', type=int, default=1, help='seed')
-parser.add_argument('--pretrained', action='store_true', help='pretrained')
-parser.add_argument('--fake_dir', type=str)
-parser.add_argument('--n_clients', type=int, default=10)
-parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
-parser.add_argument('--dir', type=str, default='./', help='directory')
-parser.add_argument('--iid', action="store_true", help='iid')
-parser.add_argument('--run_name', type=str, default='')
-
-args = parser.parse_args()
-
-
 def main(args):
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)

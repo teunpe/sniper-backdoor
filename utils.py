@@ -14,6 +14,7 @@ import seaborn as sns
 import gc
 import copy
 import psutil
+import math
 
 
 torch.manual_seed(42)
@@ -92,7 +93,7 @@ class CustomDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.data)
-
+    
 
 def normalize(x):
     """Normalize input over dimension 2 with Euclidian norm (p=2)
@@ -292,7 +293,7 @@ def get_entire_dataset(size=1000, split=0.05, batch=64, datadir='./data'):
     return trainloader, testloader, n_classes
 
 
-def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./data'):
+def get_dataset(n_clients, dataname, iid=False, batch=64, valsplit=0.05, holdoutsplit=0.05, datadir='./data'):
     '''
     Get a list comprising the test and train loaders of each client 
 
@@ -328,6 +329,8 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
         n_classes = 10
         trainset = MNIST(root=datadir, train=True,
                          download=True)
+        valset = MNIST(root=datadir, train=True, 
+                       download=True)
         testset = MNIST(root=datadir, train=False,
                         download=True)
         holdoutset = MNIST(root=datadir, train=True,
@@ -337,6 +340,8 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
         n_classes = 26
         trainset = EMNIST(root=datadir, train=True, split='letters',
                           download=True)
+        valset = EMNIST(root=datadir, train=True, split='letters',
+                       download=True)
         testset = EMNIST(root=datadir, train=False, split='letters',
                          download=True)
         holdoutset = EMNIST(root=datadir, train=True, split='letters',
@@ -345,11 +350,14 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
         trainset.targets = trainset.targets - 1
         testset.targets = testset.targets - 1
         holdoutset.targets = holdoutset.targets - 1
+        valset.targets = valset.targets - 1
 
     elif dataname == 'fmnist':
         n_classes = 10
         trainset = FashionMNIST(root=datadir, train=True,
                                 download=True)
+        valset = FashionMNIST(root=datadir, train=True, 
+                       download=True)
         testset = FashionMNIST(root=datadir, train=False,
                                download=True)
         holdoutset = FashionMNIST(root=datadir, train=True, download=True)
@@ -393,6 +401,8 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
 
         trainset = CIFAR100(root=datadir, train=True,
                             download=True)
+        valset = CIFAR100(root=datadir, train=True, 
+                       download=True)
         testset = CIFAR100(root=datadir, train=False,
                            download=True)
         holdoutset = CIFAR100(root=datadir, train=True,
@@ -401,30 +411,39 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
         raise ValueError(f'Dataset {dataname} not supported')
 
     # Ensure that targets and data are a tensor
-    if type(trainset.targets) != torch.Tensor:
-        trainset.targets = torch.Tensor(trainset.targets)
-    if type(trainset.data) != torch.Tensor:
-        trainset.data = torch.Tensor(trainset.data)
-    if type(holdoutset.targets) != torch.Tensor:
-        holdoutset.targets = torch.Tensor(holdoutset.targets)
-    if type(holdoutset.data) != torch.Tensor:
-        holdoutset.data = torch.Tensor(holdoutset.data)
+    for set in [trainset, valset, holdoutset]:
+        if type(set.targets) != torch.Tensor:
+            set.targets = torch.Tensor(set.targets)
+        if type(set.data) != torch.Tensor:
+            set.data = torch.Tensor(set.data)
+    validation_holdout_len = math.floor((valsplit + holdoutsplit)*len(trainset))
+    perm = np.random.permutation(len(trainset))
+    
+    trainperm = perm[validation_holdout_len:]
 
-    perm = np.random.permutation(len(trainset))[size:]
+    trainset.data = trainset.data[trainperm]
+    trainset.targets = trainset.targets[trainperm]
 
-    holdoutperm = perm[:size]
-    print(type(holdoutperm[0]))
+    validation_holdoutperm = perm[:validation_holdout_len]
+    
+    holdout_len = math.floor(validation_holdout_len*holdoutsplit/(valsplit+holdoutsplit))
+    val_len = validation_holdout_len - holdout_len
+
+    holdoutperm = validation_holdoutperm[:val_len]
     holdoutset.data = holdoutset.data[holdoutperm]
     holdoutset.targets = holdoutset.targets[holdoutperm]
 
     holdoutset = CustomDataset(holdoutset.data, holdoutset.targets,
                                transform=transform, n_classes=n_classes)
     holdoutloader = torch.utils.data.DataLoader(holdoutset, batch_size = 64, num_workers = 3)
-    torch.save(holdoutloader, './results/holdout.pt')
 
-    trainperm = perm[size:]
-    trainset.data = trainset.data[trainperm]
-    trainset.targets = trainset.targets[trainperm]
+    valperm = validation_holdoutperm[val_len:]
+    valset.data = valset.data[valperm]
+    valset.targets = valset.targets[valperm]
+
+    validationset = CustomDataset(valset.data, valset.targets,
+                               transform=transform, n_classes=n_classes)
+    validationloader = torch.utils.data.DataLoader(validationset, batch_size = 64, num_workers = 3)
 
     if iid:
         list_train = get_iid_data(
@@ -439,7 +458,7 @@ def get_dataset(n_clients, dataname, iid=False, batch=64, size=1000, datadir='./
     list_test = [torch.utils.data.DataLoader(
         testset, batch_size=64, num_workers=3) for _ in range(n_clients)]
 
-    return list_train, list_test, n_classes, holdoutloader
+    return list_train, list_test, n_classes, holdoutloader, validationloader
 
 
 def get_iid_data(n_clients, trainset, transform, batch, n_classes):
@@ -532,7 +551,7 @@ def get_non_iid_data(n_clients, trainset, transform, batch, n_classes):
     return list_train
 
 
-def trainer(clients, server, epochs, test_freq=999, early_stop=False, results_dir='results'):
+def trainer(clients, server, validationloader, epochs, test_freq=999, early_stop=False, results_dir='results'):
     """Run the training loop over the clients and server for the given number of epochs.
 
     Parameters
@@ -545,13 +564,10 @@ def trainer(clients, server, epochs, test_freq=999, early_stop=False, results_di
         number of training rounds 
     """    
     if early_stop:
-        if test_freq == 999:
-            raise RuntimeError("Early stopping set to True, but test frequency not set.")
-        else:
-            best_loss = 999
-            best_epoch = 0
-            best_model_weights = None
-            patience = 10
+        best_loss = 999
+        best_epoch = 0
+        best_model_weights = None
+        patience = 6
     
     print(f'\n[!] Training the model for {epochs} epochs')
     # train the model for the number of epochs
@@ -588,20 +604,21 @@ def trainer(clients, server, epochs, test_freq=999, early_stop=False, results_di
         server.fedavg()
 
         # Save the test loss and accuracy every other epoch
-        if (epoch+1) % test_freq == 0:
+        if (epoch+1) % test_freq == 0 or early_stop:
             test_loss, test_acc = server.evaluate()
             print(f'[!] Server testing accuracy: {test_acc:.4f}')
-
-            if test_loss < best_loss:
-                best_loss = test_loss
-                best_epoch = epoch
-                best_model_weights = copy.deepcopy(server.model.state_dict())
-                patience = 10
-            else:
-                patience -= 1
-                if patience == 0:
-                    server.model.load_state_dict(best_model_weights)
-                    return server.model, best_epoch
+            if early_stop:
+                print(f'[!] Current loss: {test_loss:.4f}, best loss: {best_loss:.4f}, patience: {patience}')
+                if test_loss < best_loss:
+                    best_loss = test_loss
+                    best_epoch = epoch
+                    best_model_weights = copy.deepcopy(server.model.state_dict())
+                    patience = 6
+                else:
+                    patience -= 1
+                    if patience == 0:
+                        server.model.load_state_dict(best_model_weights)
+                        return server.model, best_epoch
 
     return server.model, epoch
 

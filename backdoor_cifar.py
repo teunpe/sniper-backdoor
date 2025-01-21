@@ -25,16 +25,6 @@ from copy import deepcopy
 
 import pickle
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--dir', type=str, default='./results', help='directory')
-# trojanvision.environ.add_argument(parser)
-# trojanvision.datasets.add_argument(parser)
-# trojanvision.models.add_argument(parser)
-# trojanvision.trainer.add_argument(parser)
-# trojanvision.marks.add_argument(parser)
-# trojanvision.attacks.add_argument(parser)
-# kwargs = vars(parser.parse_args())
-# args = parser.parse_args()
 
 def personalize_model(results_dir: str, args):
     """Personalize the backdoored CIFAR100 model. 
@@ -76,17 +66,17 @@ def personalize_model(results_dir: str, args):
     # evaluate model before finetuning step
     test_loss, test_acc = backdoor_evaluate(
                     model, test_loader, criterion, device)
-    print(f'[!] Testing accuracy before finetuning: {test_acc:.4f}')
+    print(f'[!] Testing accuracy before finetuning: {test_acc:.4f}', flush=True)
 
     # fine tune the model
     for epoch in range(args.finetuning_epochs):
-        print(f'\n[!] Epoch {epoch + 1} / {args.finetuning_epochs}')
+        print(f'\n[!] Epoch {epoch + 1} / {args.finetuning_epochs}', flush=True)
         train_loss, train_acc = backdoor_train(model, holdoutloader,
                                 optimizer, criterion, device)
         test_loss, test_acc = backdoor_evaluate(
                         model, test_loader, criterion, device)
-        print(f'[!] Training accuracy: {train_acc:.4f}')
-        print(f'[!] Testing accuracy: {test_acc:.4f}')
+        print(f'[!] Training accuracy: {train_acc:.4f}', flush=True)
+        print(f'[!] Testing accuracy: {test_acc:.4f}', flush=True)
     return model
 
 
@@ -154,12 +144,11 @@ def main(epsilon, personalized, args):
 
     results_dir = os.path.join(args.dir, 'results', args.run_name)
     
-    results = []
     model = None
     if personalized:
         model = personalize_model(results_dir, args)
     curr_asr, curr_clean_acc, state_dict, holdout = run_attack(epsilon, personalized, model, results_dir, args, kwargs)
-    results.append({'eps': epsilon, 'asr': curr_asr, 'clean_acc': curr_clean_acc, 'holdoutloader': holdout})
+    
     
     if personalized: 
         path = os.path.join(
@@ -168,12 +157,8 @@ def main(epsilon, personalized, args):
         path = os.path.join(
             results_dir, f'{args.dataname}_{args.epsilon}_{args.source_label}->{args.target_label}_iid_{args.iid}_backdoor_results.pt')
 
-    torch.save({'results': results}, path)
-    print(path)
+    torch.save({'eps': epsilon, 'asr': curr_asr, 'clean_acc': curr_clean_acc, 'holdoutloader': holdout}, path)
 
-    with open(f'{path}.pickle', 'wb') as p:
-        pickle.dump({'results': results},
-                p, pickle.HIGHEST_PROTOCOL)
 
 if __name__ == '__main__':
     main()

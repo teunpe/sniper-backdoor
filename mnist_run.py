@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser(description='Dataname')
 
 parser.add_argument('--dataname', type=str, default='mnist',
                     help='dataname', choices=['mnist', 'emnist', 'fmnist', 'cifar100'])
+parser.add_argument('--train', action='store_true')
 
 given_args = parser.parse_args()
 given_kwargs = vars(parser.parse_args)
@@ -92,7 +93,8 @@ def main():
     args = global_args()
     args.run_name = f'{datanames[0]}_training'
     args.dir = '//vol/csedu-nobackup/project/tpeeters'
-    args.train = True
+    args.train = given_args.train
+    print(args.train)
     tqdm_file = open(f'{args.run_name}_progress.txt','w')
 
     sources = [0,1]
@@ -122,7 +124,7 @@ def main():
                     else: 
                          backdoor.main(args)
 
-                    print(f'[!] Training backdoored model on {args.dataname} with iid {args.iid},'
+                    print(f'[!] Personalizing backdoored model on {args.dataname} with iid {args.iid},'
                         f'epsilon {args.epsilon}, source {source} and target {target}.')
                     if dataname == 'cifar100':
                          backdoor_cifar.main(epsilon, True, args)

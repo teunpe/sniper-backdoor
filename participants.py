@@ -77,6 +77,7 @@ class Participant:
                                                 dim=1)).sum().item()
 
         test_loss /= len(self.valloader)
+        print(len(self.valloader))
         test_acc = 100 * correct / len(self.valloader.dataset.data)
 
         self.list_test_loss.append(test_loss)
