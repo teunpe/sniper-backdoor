@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser(description='Dataname')
 parser.add_argument('--dataname', type=str, default='mnist',
                     help='dataname', choices=['mnist', 'emnist', 'fmnist', 'cifar100'])
 parser.add_argument('--train', action='store_true')
+parser.add_argument('--perfedavg', action='store_true')
 
 given_args = parser.parse_args()
 given_kwargs = vars(parser.parse_args)
@@ -26,6 +27,7 @@ class global_args():
         warm = False
         train = True
         # train args
+        perfedavg = False
         valsplit = 0.05
         holdoutsplit = 0.05
         n_clients = 5
@@ -94,6 +96,7 @@ def main():
     args.run_name = f'{datanames[0]}_training'
     args.dir = '//vol/csedu-nobackup/project/tpeeters'
     args.train = given_args.train
+    args.perfedavg = given_args.perfedavg
     print(args.train)
     tqdm_file = open(f'{args.run_name}_progress.txt','w')
 

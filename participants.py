@@ -11,6 +11,7 @@ import gc
 from copy import deepcopy
 import psutil
 import pickle
+from typing import Tuple, Union
 
 
 class Participant:
@@ -75,9 +76,8 @@ class Participant:
                 _, pred = output.max(1)
                 correct += pred.eq(torch.argmax(target,
                                                 dim=1)).sum().item()
-
+        print(len(self.valloader.dataset))
         test_loss /= len(self.valloader)
-        print(len(self.valloader))
         test_acc = 100 * correct / len(self.valloader.dataset.data)
 
         self.list_test_loss.append(test_loss)
@@ -144,6 +144,9 @@ class Client(Participant):
         self.latent_space = []
         self.models_record = []
         self.epoch = 0
+        self.alpha = 0.01
+        self.beta = 0.001
+        
 
     def record_model(self, i, epoch, path):
         '''
@@ -239,6 +242,88 @@ class Client(Participant):
         self.list_train_acc.append(train_acc)
         self.model.to('cpu')
         return train_loss, train_acc
+    
+    def get_data_batch(self):
+        try:
+            x, y = next(self.iter_trainloader)
+        except StopIteration:
+            self.iter_trainloader = iter(self.trainloader)
+            x, y = next(self.iter_trainloader)
+
+        return x.to(self.device), y.to(self.device)
+    
+    def train_perfedavg(self):
+        self.model.to(self.device)
+        self.model.train()
+        for local_epoch in range(self.local_epochs):
+            running_loss = 0.0
+            correct = 0
+            total = 0 
+
+            temp_model = deepcopy(self.model)
+            data_batch_1 = self.get_data_batch()
+            grads = self.compute_grad(temp_model, data_batch_1)
+            for param, grad in zip(temp_model.parameters(), grads):
+                param.data.sub_(self.alpha * grad)
+
+            data_batch_2 = self.get_data_batch()
+            grads_1st = self.compute_grad(temp_model, data_batch_2)
+
+            data_batch_3 = self.get_data_batch()
+
+            grads_2nd = self.compute_grad(
+                self.model, data_batch_3, v=grads_1st, second_order_grads=True
+            )
+            # NOTE: Go check https://github.com/KarhouTam/Per-FedAvg/issues/2 if you confuse about the model update.
+            for param, grad1, grad2 in zip(
+                self.model.parameters(), grads_1st, grads_2nd
+            ):
+                param.data.sub_(self.beta * grad1 - self.beta * self.alpha * grad2)
+
+        self.model.to('cpu')
+        return 0, 0
+    
+    def compute_grad(
+        self,
+        model: torch.nn.Module,
+        data_batch: Tuple[torch.Tensor, torch.Tensor],
+        v: Union[Tuple[torch.Tensor, ...], None] = None,
+        second_order_grads=False,
+    ):
+        x, y = data_batch
+        if second_order_grads:
+            frz_model_params = deepcopy(model.state_dict())
+            delta = 1e-3
+            dummy_model_params_1 = OrderedDict()
+            dummy_model_params_2 = OrderedDict()
+            with torch.no_grad():
+                for (layer_name, param), grad in zip(model.named_parameters(), v):
+                    dummy_model_params_1.update({layer_name: param + delta * grad})
+                    dummy_model_params_2.update({layer_name: param - delta * grad})
+
+            model.load_state_dict(dummy_model_params_1, strict=False)
+            logit_1 = model(x)
+            loss_1 = self.criterion(logit_1, y)
+            grads_1 = torch.autograd.grad(loss_1, model.parameters())
+
+            model.load_state_dict(dummy_model_params_2, strict=False)
+            logit_2 = model(x)
+            loss_2 = self.criterion(logit_2, y)
+            grads_2 = torch.autograd.grad(loss_2, model.parameters())
+
+            model.load_state_dict(frz_model_params)
+
+            grads = []
+            with torch.no_grad():
+                for g1, g2 in zip(grads_1, grads_2):
+                    grads.append((g1 - g2) / (2 * delta))
+            return grads
+
+        else:
+            logit = model(x)
+            loss = self.criterion(logit, y)
+            grads = torch.autograd.grad(loss, model.parameters())
+            return grads
 
 
 class Server(Participant):
