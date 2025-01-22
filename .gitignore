@@ -11,3 +11,6 @@ siamese_net.jpg
 cifar_progress.txt
 extreme_eps.csv
 multiple_runs.csv
+*.txt
+*.swp
+logs/
