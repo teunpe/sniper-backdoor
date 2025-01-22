@@ -146,6 +146,7 @@ class Client(Participant):
         self.epoch = 0
         self.alpha = 0.01
         self.beta = 0.001
+        self.iter_trainloader = iter(self.trainloader)
         
 
     def record_model(self, i, epoch, path):
@@ -221,7 +222,7 @@ class Client(Participant):
                 self.optimizer.zero_grad()
                 output = self.model(data)
 
-                loss = self.criterion(output, torch.argmax(target, dim=1))
+                loss = self.crititer_trainloadererion(output, torch.argmax(target, dim=1))
 
                 loss.backward()
                 self.optimizer.step()
@@ -263,7 +264,9 @@ class Client(Participant):
             temp_model = deepcopy(self.model)
             data_batch_1 = self.get_data_batch()
             grads = self.compute_grad(temp_model, data_batch_1)
-            for param, grad in zip(temp_model.parameters(), grads):
+            for param, grad in zip(
+                [p for p in self.model.parameters() if p.requires_grad], grads
+                ):
                 param.data.sub_(self.alpha * grad)
 
             data_batch_2 = self.get_data_batch()
@@ -273,11 +276,11 @@ class Client(Participant):
 
             grads_2nd = self.compute_grad(
                 self.model, data_batch_3, v=grads_1st, second_order_grads=True
-            )
+                )
             # NOTE: Go check https://github.com/KarhouTam/Per-FedAvg/issues/2 if you confuse about the model update.
             for param, grad1, grad2 in zip(
-                self.model.parameters(), grads_1st, grads_2nd
-            ):
+                [p for p in self.model.parameters() if p.requires_grad], grads_1st, grads_2nd
+                ):
                 param.data.sub_(self.beta * grad1 - self.beta * self.alpha * grad2)
 
         self.model.to('cpu')
@@ -290,6 +293,8 @@ class Client(Participant):
         v: Union[Tuple[torch.Tensor, ...], None] = None,
         second_order_grads=False,
     ):
+        if self.data == 'cifar100':
+            return self.compute_grad_vgg(model, data_batch, v, second_order_grads)
         x, y = data_batch
         if second_order_grads:
             frz_model_params = deepcopy(model.state_dict())
@@ -323,6 +328,53 @@ class Client(Participant):
             logit = model(x)
             loss = self.criterion(logit, y)
             grads = torch.autograd.grad(loss, model.parameters())
+            return grads
+        
+    def compute_grad_vgg(
+        self,
+        model: torch.nn.Module,
+        data_batch: Tuple[torch.Tensor, torch.Tensor],
+        v: Union[Tuple[torch.Tensor, ...], None] = None,
+        second_order_grads=False,
+    ):
+        x, y = data_batch
+
+        # Filter trainable parameters
+        trainable_params = [p for p in model.parameters() if p.requires_grad]
+        trainable_named_params = [(name, param) for name, param in model.named_parameters() if param.requires_grad]
+
+        if second_order_grads:
+            frz_model_params = deepcopy(model.state_dict())
+            delta = 1e-3
+            dummy_model_params_1 = OrderedDict()
+            dummy_model_params_2 = OrderedDict()
+            with torch.no_grad():
+                for (layer_name, param), grad in zip(trainable_named_params, v):
+                    dummy_model_params_1[layer_name] = param + delta * grad
+                    dummy_model_params_2[layer_name] = param - delta * grad
+
+            model.load_state_dict({**frz_model_params, **dummy_model_params_1}, strict=False)
+            logit_1 = model(x)
+            loss_1 = self.criterion(logit_1, y)
+            grads_1 = torch.autograd.grad(loss_1, trainable_params, create_graph=True)
+
+            model.load_state_dict({**frz_model_params, **dummy_model_params_2}, strict=False)
+            logit_2 = model(x)
+            loss_2 = self.criterion(logit_2, y)
+            grads_2 = torch.autograd.grad(loss_2, trainable_params, create_graph=True)
+
+            model.load_state_dict(frz_model_params)
+
+            grads = []
+            with torch.no_grad():
+                for g1, g2 in zip(grads_1, grads_2):
+                    grads.append((g1 - g2) / (2 * delta))
+            return grads
+
+        else:
+            logit = model(x)
+            loss = self.criterion(logit, y)
+            grads = torch.autograd.grad(loss, trainable_params)
             return grads
 
 

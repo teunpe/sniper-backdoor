@@ -12,6 +12,7 @@ parser.add_argument('--dataname', type=str, default='mnist',
                     help='dataname', choices=['mnist', 'emnist', 'fmnist', 'cifar100'])
 parser.add_argument('--train', action='store_true')
 parser.add_argument('--perfedavg', action='store_true')
+parser.add_argument('--run_name', type=str, default='')
 
 given_args = parser.parse_args()
 given_kwargs = vars(parser.parse_args)
@@ -57,7 +58,7 @@ class global_args():
                 self.lr = 0.1
                 self.momentum = 0.9
                 self.dataname = 'mnist'
-                self.n_epochs = 50
+                self.n_epochs = 300
                 self.n_local_epochs = 2
                 self.iid = iid
                 
@@ -66,7 +67,7 @@ class global_args():
                 self.lr = 0.001
                 self.momentum = 0.9
                 self.dataname = 'emnist'
-                self.n_epochs = 30 if iid else 200
+                self.n_epochs = 300
                 self.n_local_epochs = 2
                 self.iid = iid
             
@@ -75,25 +76,26 @@ class global_args():
                 self.lr = 0.00001
                 self.momentum = 0
                 self.dataname = 'fmnist'
-                self.n_epochs = 200
+                self.n_epochs = 300
                 self.n_local_epochs = 1
                 self.iid = iid
                 self.backdoor_epochs = 20
                 self.backdoor_lr = 0.01
 
             if dataname=='cifar100':
-                 self.n_clients = 10
-                 self.lr = 0.001
-                 self.momentum = 0.9
-                 self.dataname = 'cifar100'
-                 self.n_epochs = 100
-                 self.n_local_epochs = 1
-                 self.iid = iid
+                self.n_clients = 10
+                self.lr = 0.001
+                self.momentum = 0.9
+                self.dataname = 'cifar100'
+                self.n_epochs = 300
+                self.n_local_epochs = 1
+                self.iid = iid
+                 
 
 def main():
     datanames = [given_args.dataname]
     args = global_args()
-    args.run_name = f'{datanames[0]}_training'
+    args.run_name = f'{datanames[0]}_{given_args.run_name}'
     args.dir = '//vol/csedu-nobackup/project/tpeeters'
     args.train = given_args.train
     args.perfedavg = given_args.perfedavg
