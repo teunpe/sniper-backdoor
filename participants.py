@@ -52,7 +52,7 @@ class Participant:
         self.list_test_loss = []
         self.list_test_acc = []
 
-    def evaluate(self):
+    def evaluate(self, validation_loader=None):
         '''
         Evaluate the model on the test set
 
@@ -64,11 +64,13 @@ class Participant:
             test accuracy
         '''
         print('VALIDATING...')
+        if validation_loader is None:
+            validation_loader = self.valloader
         self.model.to(self.device)
         test_loss = 0
         correct = 0
         with torch.no_grad():
-            for (data, target) in self.valloader:
+            for (data, target) in validation_loader:
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.model(data)
                 test_loss += self.criterion(output,
@@ -76,9 +78,8 @@ class Participant:
                 _, pred = output.max(1)
                 correct += pred.eq(torch.argmax(target,
                                                 dim=1)).sum().item()
-        print(len(self.valloader.dataset))
-        test_loss /= len(self.valloader)
-        test_acc = 100 * correct / len(self.valloader.dataset.data)
+        test_loss /= len(validation_loader)
+        test_acc = 100 * correct / len(validation_loader.dataset)
 
         self.list_test_loss.append(test_loss)
         self.list_test_acc.append(test_acc)
@@ -222,7 +223,7 @@ class Client(Participant):
                 self.optimizer.zero_grad()
                 output = self.model(data)
 
-                loss = self.crititer_trainloadererion(output, torch.argmax(target, dim=1))
+                loss = self.criterion(output, torch.argmax(target, dim=1))
 
                 loss.backward()
                 self.optimizer.step()
@@ -400,9 +401,11 @@ class Server(Participant):
     extract_latent_space()
         Extracts the latent space of the server model by running a test sample through the model hidden layers 
     '''
-    def __init__(self, clients, dataname='mnist', n_classes=10, testloader=None, valloader=None):
+    def __init__(self, clients, dataname='mnist', n_classes=10, testloader=None, valloader=None, lr=0.001, momentum=0.9):
         super().__init__(testloader, valloader, dataname=dataname, n_classes=n_classes)
         self.clients = clients
+        self.optimizer = optim.SGD(
+            self.model.parameters(), lr=lr, momentum=momentum)
 
     def fedavg(self):
         '''
@@ -474,3 +477,54 @@ class Server(Participant):
             client.latent_space.append(torch.flatten(my_output))
             hook.remove()
             client.model.to('cpu')
+
+    def evaluate(self, perfedavg=False, personalization_epochs=0):
+        """Evaluate Server performance. If PerFedAvg is used, first train the model for a number of epochs, then evaluate.
+
+        Parameters
+        ----------
+        perfedavg : bool
+            by default False
+        personalization_epochs : int
+            by default 0
+
+        Returns
+        -------
+        tuple
+            test_loss, test_acc
+        """        
+        if not perfedavg:
+            return super().evaluate()
+        else:
+            self.model.to(self.device)
+
+            dataset = self.valloader.dataset
+            training_data, validation_data = torch.utils.data.random_split(dataset, [0.8, 0.2])
+            train_loader = torch.utils.data.DataLoader(training_data, batch_size=64)
+            validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=64)
+
+            
+
+            for epoch in range(personalization_epochs):
+                running_loss = 0.0
+                correct = 0
+                total = 0 
+                for (data, target) in train_loader:
+                    data, target = data.to(self.device), target.to(self.device)
+                    self.optimizer.zero_grad()
+                    output = self.model(data)
+
+                    loss = self.criterion(output, torch.argmax(target, dim=1))
+
+                    loss.backward()
+                    self.optimizer.step()
+
+                    running_loss += loss.item()
+
+                    _, predicted = output.max(1)
+                    total += target.size(0)
+                    correct += predicted.eq(torch.argmax(target,
+                                            dim=1)).sum().item()
+                    del data, target, predicted, loss
+                    torch.cuda.empty_cache()
+            return super().evaluate(validation_loader)
